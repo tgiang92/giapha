@@ -1,0 +1,1867 @@
+<!doctype html>
+<html lang="vi"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gia phả gia đình</title>
+<style>
+  :root{
+    --navy:#011554; --navy2:#0B2A74; --gold:#F2E61A; --bg:#F6F8FB;
+    --card:#ffffff; --line:#E2E8F0; --ink:#0F172A; --muted:#566179;
+    --fem:#F0A92B; --red:#D64545;
+    --paternal:rgba(1,21,84,.05); --maternal:rgba(240,169,43,.10);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);
+       font:14px/1.45 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+       display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+  header{background:var(--navy);color:#fff;padding:10px 18px;display:flex;
+         align-items:center;gap:16px;flex:0 0 auto;z-index:20;
+         box-shadow:0 2px 10px rgba(1,21,84,.18)}
+  .brand{display:flex;align-items:center;gap:10px}
+  .mono{width:32px;height:32px;border-radius:8px;background:var(--gold);
+        color:var(--navy);font-weight:800;display:grid;place-items:center;font-size:15px}
+  .brand h1{margin:0;font-size:15px;font-weight:700;letter-spacing:.2px}
+  .brand span{display:block;font-size:10.5px;color:#B9C4E4;font-weight:500;letter-spacing:.6px;text-transform:uppercase}
+  .focus{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0}
+  .pill{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);
+        border-radius:999px;padding:6px 14px;font-size:12.5px;white-space:nowrap;
+        overflow:hidden;text-overflow:ellipsis;max-width:52vw}
+  .pill b{color:var(--gold);font-weight:700}
+  .btn{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);
+       color:#fff;border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:15px;
+       display:grid;place-items:center;transition:.15s}
+  .btn:hover{background:rgba(255,255,255,.22)}
+  .btn:disabled{opacity:.32;cursor:default}
+
+  main{position:relative;flex:1 1 auto;overflow:auto;background:
+       radial-gradient(circle at 50% 0%, #ffffff 0%, var(--bg) 46%)}
+  #canvas{position:relative;margin:0 auto}
+
+  .winglabel{position:absolute;font-size:11px;font-weight:800;letter-spacing:1.4px;
+             text-transform:uppercase;color:#8A94AB;white-space:nowrap}
+  .generation{position:absolute;font-size:11px;font-weight:700;color:#9AA4B8;
+              letter-spacing:.8px;writing-mode:vertical-rl;transform:rotate(180deg);
+              text-align:center}
+
+  .card{position:absolute;width:136px;height:92px;background:var(--card);
+        border:1px solid var(--line);border-radius:12px;padding:8px 9px;
+        display:flex;gap:8px;cursor:pointer;transition:box-shadow .15s,transform .15s;
+        box-shadow:0 1px 2px rgba(15,23,42,.05);user-select:none}
+  .card:hover{box-shadow:0 6px 18px rgba(1,21,84,.16);transform:translateY(-1px);z-index:5}
+  .card.ex{border-style:dashed;background:#FCFDFF}
+  .card.step{border-style:dashed;border-color:#B9C5DA;background:#FCFDFF}
+  .card.step .role{background:#F2F5FA;color:#5A6785}
+  .role.long{text-transform:none;font-size:9px;letter-spacing:0;font-weight:700}
+  .card.ex .role{background:#F4F6FA;color:#6B7690}
+  .cbtn{position:absolute;right:5px;bottom:5px;width:19px;height:19px;border-radius:50%;
+    border:1px solid var(--line);background:#fff;color:#8A94AB;font-size:11px;line-height:1;
+    display:grid;place-items:center;cursor:pointer;opacity:0;transition:.15s;padding:0;z-index:2}
+  .card:hover .cbtn{opacity:1}
+  .cbtn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+  @media (hover:none){ .cbtn{opacity:1;width:22px;height:22px;font-size:12px} }
+  .role{max-width:calc(100% - 22px)}
+  .card.static{cursor:default}
+  .card.static:hover{box-shadow:0 1px 2px rgba(15,23,42,.05);transform:none}
+  .card.focus{border-color:var(--navy);border-width:2px;
+              box-shadow:0 6px 18px rgba(1,21,84,.22)}
+  .card.focus::after{content:"";position:absolute;left:-2px;right:-2px;top:-2px;height:4px;
+              background:var(--gold);border-radius:12px 12px 0 0}
+  .avatar{width:32px;height:32px;border-radius:50%;flex:0 0 32px;display:grid;place-items:center;
+          font-size:11px;font-weight:800;color:#fff;background:var(--navy);margin-top:2px}
+  .card.f .avatar{background:var(--fem)}
+  .cbody{min-width:0;flex:1 1 auto;display:flex;flex-direction:column;gap:1px}
+  .name{font-size:12.5px;font-weight:700;line-height:1.25;color:var(--ink);
+        display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .years{font-size:10.5px;color:var(--muted);letter-spacing:.2px}
+  .role{align-self:flex-start;margin-top:auto;font-size:10px;font-weight:700;
+        letter-spacing:.4px;text-transform:uppercase;color:var(--navy);
+        background:#EEF2FA;border-radius:5px;padding:1.5px 6px;max-width:100%;
+        overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .card.f .role{color:#8A5A00;background:#FEF6E4}
+  .chip{position:absolute;left:30px;top:28px;min-width:15px;height:15px;border-radius:999px;
+        background:var(--navy);color:#fff;font-size:9px;font-weight:800;display:grid;
+        place-items:center;padding:0 3px;box-shadow:0 0 0 2px #fff}
+
+
+  footer{flex:0 0 auto;background:#fff;border-top:1px solid var(--line);
+         padding:8px 18px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;
+         font-size:11.5px;color:var(--muted);z-index:20}
+  .legenditem{display:flex;align-items:center;gap:7px}
+  .swatch{width:22px;height:12px;border-radius:3px;border:1px solid var(--line)}
+  .toggle{background:#EEF2FA;border:1px solid #D6DDEC;color:#011554;border-radius:7px;
+          padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+  .toggle:hover{background:#E2E8F5}
+
+  #empty{position:absolute;inset:0;display:none;place-content:center;justify-items:center;gap:8px;text-align:center;padding:24px}
+  #empty .e-title{font-size:18px;font-weight:800;color:var(--navy)}
+  #empty .e-sub{font-size:13px;color:var(--muted);max-width:340px;line-height:1.5}
+  #firstBtn{margin-top:10px;background:var(--navy);color:#fff;border:0;border-radius:9px;
+    padding:10px 18px;font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+  #firstBtn:hover{background:#0B2A74}
+  .picker{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;z-index:60;
+    place-items:center;padding:20px}
+  .picker.open{display:grid}
+  .picker-box{background:#fff;border-radius:14px;width:420px;max-width:100%;max-height:80vh;
+    display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 50px rgba(1,21,84,.3)}
+  .picker-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;
+    border-bottom:1px solid var(--line);font-weight:800;color:var(--navy);font-size:14px}
+  .picker-head button{background:none;border:0;font-size:16px;cursor:pointer;color:var(--muted)}
+  #pickerSearch{margin:12px 16px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;
+    font:inherit;font-size:13px}
+  #pickerList{overflow:auto;padding:0 8px 12px}
+  .pickrow{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;
+    border-radius:9px;cursor:pointer;font-size:13.5px}
+  .pickrow:hover{background:#EEF2FA}
+  .pickrow small{color:var(--muted);font-size:11.5px}
+  .pickempty{padding:24px;text-align:center;color:var(--muted);font-size:13px}
+  .chipx{display:inline-flex;align-items:center;gap:4px;font-style:normal;font-weight:600;
+    background:#EEF2FA;border:1px solid #DCE3F0;border-radius:999px;padding:2px 8px;margin:2px 0 2px 6px;
+    cursor:pointer;font-size:11.5px;color:var(--navy)}
+  .chipx:hover{background:#FDE8E6;border-color:#F3C2BD;color:#B42318}
+  .zoomgrp{display:flex;align-items:center;gap:4px}
+  .btn.lbl{width:auto;padding:0 9px;font-size:11.5px;font-weight:700;letter-spacing:.3px}
+  .photo{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+  .pbox{width:78px;height:78px;border-radius:12px;overflow:hidden;background:#EEF2FA;
+    display:grid;place-items:center;color:#8A94AB;font-size:11px;font-weight:700;
+    flex:0 0 78px;border:1px solid var(--line)}
+  .pbox img{width:100%;height:100%;object-fit:cover;display:block}
+  .pactions{display:flex;flex-direction:column;gap:6px}
+  .pactions button{border:1px solid #D6DDEC;background:#F3F6FC;color:var(--navy);border-radius:8px;
+    padding:5px 10px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer;text-align:left}
+  .pactions button:hover{background:#E6ECF8}
+  .pactions button.del{color:#B42318;border-color:#F2C7C2;background:#FEF4F2}
+  #scrim{position:fixed;inset:0;background:rgba(15,23,42,.35);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+  #scrim.open{opacity:1;pointer-events:auto}
+  #sheet{position:fixed;top:0;right:0;height:100%;width:380px;max-width:92vw;background:#fff;
+    box-shadow:-8px 0 30px rgba(1,21,84,.18);transform:translateX(105%);transition:transform .25s;z-index:41;
+    display:flex;flex-direction:column}
+  #sheet.open{transform:none}
+  .sheet-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .sheet-title{font-weight:800;color:var(--navy);font-size:15px;flex:1;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .sheet-body{overflow:auto;padding:14px 16px 40px;display:flex;flex-direction:column;gap:10px}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .field input,.field select,.field textarea{border:1px solid var(--line);border-radius:8px;padding:7px 9px;
+    font:inherit;font-size:13px;color:var(--ink);background:#fff;width:100%}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:2px solid rgba(1,21,84,.14);border-color:var(--navy)}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .sect{margin-top:8px;font-size:11px;font-weight:800;letter-spacing:1px;color:#8A94AB;text-transform:uppercase}
+  .rel{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .rel span{color:var(--muted);flex:0 0 auto}
+  .rel b{font-weight:600;text-align:right}
+  .frow{display:grid;grid-template-columns:42px 1fr;gap:8px;align-items:center;margin-bottom:6px}
+  .frow label{font-size:11.5px;font-weight:700;color:var(--muted)}
+  .frow select{border:1px solid var(--line);border-radius:8px;padding:6px 7px;font:inherit;
+    font-size:11.5px;background:#fff;min-width:0;color:var(--ink)}
+  .fsub{font-size:11.5px;font-weight:700;color:var(--muted);margin:4px 0 6px}
+  .mrow2{display:grid;grid-template-columns:1fr 26px;gap:6px;align-items:center;margin-bottom:6px}
+  .mrow2 select{border:1px solid var(--line);border-radius:8px;padding:6px 7px;font:inherit;
+    font-size:11.5px;background:#fff;min-width:0;color:var(--ink)}
+  .mrow{display:grid;grid-template-columns:1fr 1.15fr 26px;gap:6px;align-items:center;margin-bottom:6px}
+  .mrow select{border:1px solid var(--line);border-radius:8px;padding:6px 7px;font:inherit;
+    font-size:11.5px;background:#fff;min-width:0;color:var(--ink)}
+  .mx{border:1px solid #F2C7C2;background:#FEF4F2;color:#B42318;border-radius:7px;height:31px;cursor:pointer;font-size:12px}
+  .addm{border:1px dashed #C9D4EC;background:#fff;color:var(--navy);border-radius:8px;padding:7px;
+    font:inherit;font-size:12px;font-weight:700;cursor:pointer;width:100%}
+  .addm:hover{background:#F3F6FC}
+  .btnrow{display:flex;flex-wrap:wrap;gap:6px}
+  .btnrow button{border:1px solid #D6DDEC;background:#F3F6FC;color:var(--navy);border-radius:8px;
+    padding:7px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+  .btnrow button:hover{background:#E6ECF8}
+  .btnrow button.ghost{background:#fff}
+  .btnrow button.danger{color:#B42318;border-color:#F2C7C2;background:#FEF4F2}
+  @media (max-width: 900px){
+    footer{gap:8px;padding:6px 10px}
+    .legenditem{display:none}
+    header{padding:8px 12px}
+    .pill{max-width:38vw;font-size:11.5px}
+  }
+  .menu-btn{margin-right:4px;font-size:16px;line-height:1}
+  #menu{position:absolute;top:56px;left:12px;background:#fff;border:1px solid var(--line);
+    border-radius:11px;box-shadow:0 12px 30px rgba(1,21,84,.18);min-width:238px;padding:6px;
+    display:none;z-index:80}
+  #menu.open{display:block}
+  #menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:9px 12px;
+    font:inherit;font-size:13px;color:var(--ink);border-radius:8px;cursor:pointer}
+  #menu button:hover{background:#F1F5FC}
+  #menu button.danger{color:#B42318}
+  #menu button.danger:hover{background:#FEF4F2}
+  #menu hr{border:0;border-top:1px solid var(--line);margin:5px 4px}
+  header{position:relative}
+  body.ro .editonly{display:none}
+  body.ro .sect, body.ro .btnrow{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="btn menu-btn editonly" id="menuBtn" title="Dữ liệu">☰</button>
+  <div id="menu" class="editonly">
+    <button data-go="exportBtn">Xuất JSON (sao lưu)</button>
+    <button data-go="viewBtn">Xuất bản xem cho điện thoại</button>
+    <hr>
+    <button data-go="importBtn">Nhập từ file JSON</button>
+    <button data-go="pasteBtn">Dán dữ liệu</button>
+    <button data-go="copyBtn">Sao chép dữ liệu</button>
+    <hr>
+    <button class="danger" data-go="clearBtn">Xoá toàn bộ dữ liệu</button>
+  </div>
+  <div class="brand">
+    <div class="mono">GP</div>
+    <div>
+      <h1>Gia phả gia đình</h1>
+      <span>Bản 3.0 · dữ liệu lưu trên máy</span>
+    </div>
+  </div>
+  <div class="focus">
+    <div class="pill" id="focusPill"><b>Đang xem:</b> ông Giang ═ bà Hoàng Dung · 1 con · 0 cháu</div>
+    <button class="btn" id="undoBtn" title="Hoàn tác">↺</button>
+    <div class="zoomgrp">
+      <button class="btn" id="zoomOut" title="Thu nhỏ">−</button>
+      <button class="btn lbl" id="zoomLbl" title="Về kích thước gốc 100%">62%</button>
+      <button class="btn" id="zoomIn" title="Phóng to">+</button>
+      <button class="btn" id="zoomFit" title="Vừa khung">⤢</button>
+    </div>
+    <button class="btn" id="backBtn" title="Quay lại hộ trước" disabled="">←</button>
+    <button class="btn" id="homeBtn" title="Về nhà tôi">⌂</button>
+  </div>
+</header>
+
+<main id="stage">
+  <div id="empty" style="display: none;">
+    <div class="e-title">Gia phả đang trống</div>
+    <div class="e-sub">Bắt đầu bằng một người, rồi thêm cha mẹ, vợ chồng, con cái quanh người đó.</div>
+    <button id="firstBtn">+ Thêm người đầu tiên</button>
+  </div>
+  <div id="canvas" style="width: 2110px; height: 899px; zoom: 0.617536;">
+    <svg id="wires" xmlns="http://www.w3.org/2000/svg" width="2110" height="899"></svg>
+    <div id="cards"></div>
+  </div>
+</main>
+
+<footer>
+  <div class="legenditem"><div class="swatch" style="background:var(--paternal);border-color:#C9D4EC"></div> Cánh trái — NỘI (họ nhà trai)</div>
+  <div class="legenditem"><div class="swatch" style="background:var(--maternal);border-color:#F3D9A8"></div> Cánh phải — NGOẠI (họ nhà gái)</div>
+  <div class="legenditem"><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="#011554" stroke-width="2.5"></line></svg> hôn nhân</div>
+  <div class="legenditem"><svg width="26" height="10"><line x1="1" y1="5" x2="25" y2="5" stroke="#8A94AB" stroke-width="2" stroke-dasharray="5 4"></line></svg> đã ly hôn</div>
+  <button id="wideBtn" class="toggle">Hiện cháu (con anh/chị em): TẮT</button>
+  <button id="stepBtn" class="toggle">Con riêng trong hàng con: BẬT</button>
+  <input type="file" id="fileInput" accept=".json,application/json" hidden="">
+  <div hidden="">
+    <button id="exportBtn"></button>
+    <button id="importBtn"></button>
+    <button id="viewBtn"></button>
+    <button id="copyBtn"></button>
+    <button id="pasteBtn"></button>
+    <button id="clearBtn"></button>
+  </div>
+</footer>
+
+<div id="scrim"></div>
+<div id="paste" class="picker">
+  <div class="picker-box">
+    <div class="picker-head"><span>Dán dữ liệu JSON</span>
+      <button id="pasteClose" title="Đóng">✕</button></div>
+    <textarea id="pasteBox" rows="9" placeholder="Dán nội dung JSON vào đây…" style="margin:12px 16px;padding:10px;border:1px solid var(--line);border-radius:9px;font:inherit;font-size:12px;resize:vertical"></textarea>
+    <div style="padding:0 16px 16px"><button id="pasteGo" class="addm">Nhập dữ liệu này</button></div>
+  </div>
+</div>
+<div id="picker" class="picker">
+  <div class="picker-box">
+    <div class="picker-head"><span id="pickerTitle">Chọn người</span>
+      <button id="pickerClose" title="Đóng">✕</button></div>
+    <input id="pickerSearch" placeholder="Tìm theo tên..." autocomplete="off">
+    <div id="pickerList"></div>
+  </div>
+</div>
+<aside id="sheet">
+  <div class="sheet-head">
+    <div class="sheet-title" id="sheetTitle">—</div>
+    <input type="file" id="photoInput" accept="image/*" hidden="">
+    <button class="btn" id="sheetClose" title="Đóng" style="background:#F1F5F9;border-color:#E2E8F0;color:#011554">✕</button>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</aside>
+
+<script>window.__DATA__={"people":[{"id":"pmw0auwdzds5","name":"Thạch Thị Biên","sex":"F","birth":1939,"death":null,"place":"","job":"","note":""},{"id":"pmw0axfip5t9","name":"Thạch Huyện","sex":"M","birth":1938,"death":null,"place":"","job":"","note":""},{"id":"pmw0ay7wmam0","name":"2 Sophol","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0aytbjn5t","name":"4 Dơl","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0az119mfa","name":"5 Duôl","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0az7wi4b9","name":"6 Del","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0azccxi3j","name":"7 Rel","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0azgs05va","name":"8 Lem","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0azl525p6","name":"9 Luốt","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0b0d1p06i","name":"4 Hà","sex":"F","birth":1966,"death":null,"place":"","job":"","note":""},{"id":"pmw0b0naiix2","name":"Giang","sex":"M","birth":1993,"death":null,"place":"","job":"","note":""},{"id":"pmw0b1cfl1f9","name":"Thanh Tuấn","sex":"M","birth":1990,"death":null,"place":"","job":"","note":""},{"id":"pmw0b1oid80f","name":"Hoàng Dung","sex":"F","birth":1993,"death":null,"place":"","job":"","note":""},{"id":"pmw0b1ygikud","name":"Hoàng Vũ","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0b2apamve","name":"The Huynh","sex":"F","birth":1965,"death":null,"place":"","job":"","note":""},{"id":"pmw0b2mka0qq","name":"Thạch Duyên","sex":"M","birth":1965,"death":null,"place":"","job":"","note":""},{"id":"pmw0b4ttbl96","name":"2 Hòa","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0b52k48tl","name":"8","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0b5r9wuwn","name":"Mẹ (chưa đặt tên)","sex":"F","birth":null},{"id":"pmw0b6epwedd","name":"Thạch Duyên","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0b6se8bda","name":"Cá Heo","sex":"F","birth":2027,"death":null,"place":"","job":"","note":""},{"id":"pmw0b97hvhpr","name":"Hoàng Vũ","sex":"M","birth":1996,"death":null,"place":"","job":"","note":""},{"id":"pmw0b9kf3wiu","name":"Tú","sex":"F","birth":2003,"death":null,"place":"Bến Tre","job":"","note":""},{"id":"pmw0basjbwl3","name":"Vợ/chồng (chưa đặt tên)","sex":"F","birth":null},{"id":"pmw0bazfxhly","name":"Sari","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bbejsmuz","name":"Khamari","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bbv2zlyk","name":"Vợ/chồng (chưa đặt tên)","sex":"F","birth":null},{"id":"pmw0bbykav9l","name":"Phách Thi","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bcaq6lep","name":"Giang","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bdpt1f1p","name":"Vàng","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bdxve4vg","name":"2 Dù","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bex5ygmz","name":"3 SaMon","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bf65f95c","name":"4 Dara","sex":"M","birth":1993,"death":null,"place":"","job":"","note":""},{"id":"pmw0bfjw69mw","name":"Vợ/chồng (chưa đặt tên)","sex":"F","birth":null},{"id":"pmw0bfnbxqb3","name":"Bánh Bao","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bg8bqen7","name":"Anh/chị/em (chưa đặt tên)","sex":"M","birth":null},{"id":"pmw0bgbthf3j","name":"Vợ/chồng (chưa đặt tên)","sex":"F","birth":null},{"id":"pmw0bj8eb4ep","name":"Con (chưa đặt tên)","sex":"M","birth":null},{"id":"pmw0bjqu4uxp","name":"Con (chưa đặt tên)","sex":"M","birth":null},{"id":"pmw0bkez8cbs","name":"8 Sen","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bkpd5dx8","name":"Duy","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bkvaf8lw","name":"Liễu","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bl5wkkzh","name":"Thiếm 8","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0blev5rq3","name":"Thái","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0blkb3z0a","name":"Nam","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0boe84xi3","name":"2 Rui","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0boidfapo","name":"2 Pha","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0boocprx0","name":"3 Tha","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bosu8ybr","name":"4 Ria","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bp2rg2jo","name":"5 Rua","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bp8oyhsz","name":"6 Rưa","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bppatqeh","name":"Phước","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bpyjm0u1","name":"Ân","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bqhb7exd","name":"Tâm","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0bqlvt56j","name":"Con (chưa đặt tên)","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cc7547ax","name":"Thôi","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cclfnseh","name":"Mint","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cd4909gb","name":"Tholy","sex":"F","birth":2012,"death":null,"place":"","job":"","note":""},{"id":"pmw0cepihed3","name":"Chồng (chưa đặt tên)","sex":"M","birth":null},{"id":"pmw0cf2itdcf","name":"Con (chưa đặt tên)","sex":"M","birth":null},{"id":"pmw0ckivfl4g","name":"2 Hảo","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0ckzdijs1","name":"2 Hiền","sex":"M","birth":1989,"death":null,"place":"","job":"","note":""},{"id":"pmw0clmqe5tu","name":"Mợ 2","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cm59k1ye","name":"3 Hậu","sex":"M","birth":1991,"death":null,"place":"","job":"","note":""},{"id":"pmw0cmxi66he","name":"4 Hải","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cnho8ij8","name":"5 Dương","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0co12hqjm","name":"Vợ (chưa đặt tên)","sex":"F","birth":null},{"id":"pmw0coabqn17","name":"Hưng","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cokerv1c","name":"Con (chưa đặt tên)","sex":"M","birth":null},{"id":"pmw0cotl425o","name":"Duy","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cp2olr9b","name":"Con (chưa đặt tên)","sex":"M","birth":null},{"id":"pmw0cphavev1","name":"Vợ (chưa đặt tên)","sex":"F","birth":null},{"id":"pmw0cpo7i2q2","name":"Ân","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cpyc13pf","name":"Con (chưa đặt tên)","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cq7amgsi","name":"Vợ (chưa đặt tên)","sex":"F","birth":null},{"id":"pmw0cqdlpm4k","name":"Con (chưa đặt tên)","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cslub888","name":"3 Hạnh","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0ct0y5ysl","name":"5 Hoa","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0ctpzpx7u","name":"6 Phong","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cu7xj0fc","name":"7 Nhã","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cuokh4oa","name":"8 Huệ","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cv2itoq7","name":"9 Hồng","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cvhagf59","name":"Út Hùng","sex":"M","birth":1972,"death":2019,"place":"","job":"","note":""},{"id":"pmw0cxv2jrw1","name":"10 Hào","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cyhszrns","name":"3 oanh","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0cyxsusqa","name":"Linh","sex":"M","birth":1996,"death":null,"place":"","job":"","note":""},{"id":"pmw0czcwx9j0","name":"Con (chưa đặt tên)","sex":"M","birth":null},{"id":"pmw0czt24n38","name":"Bà Nha","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0d0cs55q1","name":"Con (chưa đặt tên)","sex":"M","birth":null},{"id":"pmw0d0sk8t33","name":"Thu Tâm","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0d6hln272","name":"Kiều","sex":"F","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0d78973s8","name":"Vợ (chưa đặt tên)","sex":"F","birth":null},{"id":"pmw0d8666q7n","name":"Hiếu","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0d8eudbsw","name":"Trung An","sex":"M","birth":null,"death":null,"place":"","job":"","note":""},{"id":"pmw0dc5jjggz","name":"Trí An","sex":"M","birth":null,"death":null,"place":"","job":"","note":""}],"unions":[{"id":"umw0axf1ccow","partners":["pmw0auwdzds5"],"status":"divorced"},{"id":"umw0axuv0ygt","partners":["pmw0axfip5t9","pmw0auwdzds5"],"status":"now"},{"id":"umw0b0d1ppya","partners":["pmw0az119mfa","pmw0b0d1p06i"],"status":"now"},{"id":"umw0b1oids4u","partners":["pmw0b0naiix2","pmw0b1oid80f"],"status":"now"},{"id":"umw0b2mkaek6","partners":["pmw0b2apamve","pmw0b2mka0qq"],"status":"now"},{"id":"umw0b5r9wfyl","partners":["pmw0b4ttbl96","pmw0b5r9wuwn"],"status":"now"},{"id":"umw0b6epw3bg","partners":["pmw0b2apamve","pmw0b6epwedd"],"status":"now"},{"id":"umw0b9kf3gdq","partners":["pmw0b97hvhpr","pmw0b9kf3wiu"],"status":"now"},{"id":"umw0basjb21l","partners":["pmw0az7wi4b9","pmw0basjbwl3"],"status":"now"},{"id":"umw0bbv2zu6j","partners":["pmw0azccxi3j","pmw0bbv2zlyk"],"status":"now"},{"id":"umw0bcaq6r4d","partners":["pmw0bbykav9l","pmw0bcaq6lep"],"status":"now"},{"id":"umw0bdpt1urh","partners":["pmw0aytbjn5t","pmw0bdpt1f1p"],"status":"now"},{"id":"umw0be42nywn","partners":["pmw0bdxve4vg"],"status":"divorced"},{"id":"umw0bfjw6zas","partners":["pmw0bf65f95c","pmw0bfjw69mw"],"status":"now"},{"id":"umw0bgbth9u3","partners":["pmw0bdxve4vg","pmw0bgbthf3j"],"status":"now"},{"id":"umw0bjipzu0p","partners":["pmw0bj8eb4ep"],"status":"now"},{"id":"umw0bkez88kw","partners":["pmw0azgs05va","pmw0bkez8cbs"],"status":"divorced"},{"id":"umw0bl5wkdf5","partners":["pmw0azgs05va","pmw0bl5wkkzh"],"status":"now"},{"id":"umw0boe84aat","partners":["pmw0ay7wmam0","pmw0boe84xi3"],"status":"now"},{"id":"umw0bppat8ru","partners":["pmw0boidfapo","pmw0bppatqeh"],"status":"divorced"},{"id":"umw0bqhb7rlw","partners":["pmw0boidfapo","pmw0bqhb7exd"],"status":"now"},{"id":"umw0cbzegn1w","partners":["pmw0azl525p6","pmw0cc7547ax"],"status":"now"},{"id":"umw0ceiia9c9","partners":["pmw0bkvaf8lw","pmw0cepihed3"],"status":"now"},{"id":"umw0ckzdi502","partners":["pmw0ckivfl4g","pmw0clmqe5tu"],"status":"now"},{"id":"umw0cnzdthbb","partners":["pmw0ckzdijs1","pmw0co12hqjm"],"status":"now"},{"id":"umw0corcw2dt","partners":["pmw0cm59k1ye","pmw0cotl425o"],"status":"now"},{"id":"umw0cpdk7k36","partners":["pmw0cmxi66he","pmw0cphavev1"],"status":"now"},{"id":"umw0cq5byou2","partners":["pmw0cnho8ij8","pmw0cq7amgsi"],"status":"now"},{"id":"umw0cyfhnkcb","partners":["pmw0cslub888","pmw0cyhszrns"],"status":"now"},{"id":"umw0czcwx93c","partners":["pmw0cyxsusqa","pmw0czt24n38"],"status":"now"},{"id":"umw0d6fkbksz","partners":["pmw0bp8oyhsz","pmw0d6hln272"],"status":"now"},{"id":"umw0d75fmfji","partners":["pmw0boocprx0","pmw0d78973s8"],"status":"divorced"},{"id":"umw0d82bzi0e","partners":["pmw0bp2rg2jo","pmw0d8666q7n"],"status":"now"}],"links":[{"p":"pmw0axfip5t9","c":"pmw0ay7wmam0"},{"p":"pmw0auwdzds5","c":"pmw0ay7wmam0"},{"p":"pmw0axfip5t9","c":"pmw0aytbjn5t"},{"p":"pmw0auwdzds5","c":"pmw0aytbjn5t"},{"p":"pmw0axfip5t9","c":"pmw0az119mfa"},{"p":"pmw0auwdzds5","c":"pmw0az119mfa"},{"p":"pmw0axfip5t9","c":"pmw0az7wi4b9"},{"p":"pmw0auwdzds5","c":"pmw0az7wi4b9"},{"p":"pmw0axfip5t9","c":"pmw0azccxi3j"},{"p":"pmw0auwdzds5","c":"pmw0azccxi3j"},{"p":"pmw0axfip5t9","c":"pmw0azgs05va"},{"p":"pmw0auwdzds5","c":"pmw0azgs05va"},{"p":"pmw0axfip5t9","c":"pmw0azl525p6"},{"p":"pmw0auwdzds5","c":"pmw0azl525p6"},{"p":"pmw0az119mfa","c":"pmw0b0naiix2"},{"p":"pmw0b0d1p06i","c":"pmw0b0naiix2"},{"p":"pmw0az119mfa","c":"pmw0b1cfl1f9"},{"p":"pmw0b0d1p06i","c":"pmw0b1cfl1f9"},{"p":"pmw0b2apamve","c":"pmw0b1oid80f"},{"p":"pmw0b4ttbl96","c":"pmw0b0d1p06i"},{"p":"pmw0b5r9wuwn","c":"pmw0b0d1p06i"},{"p":"pmw0b6epwedd","c":"pmw0b1oid80f"},{"p":"pmw0b0naiix2","c":"pmw0b6se8bda"},{"p":"pmw0b1oid80f","c":"pmw0b6se8bda"},{"p":"pmw0b2apamve","c":"pmw0b97hvhpr"},{"p":"pmw0b6epwedd","c":"pmw0b97hvhpr"},{"p":"pmw0az7wi4b9","c":"pmw0bazfxhly"},{"p":"pmw0basjbwl3","c":"pmw0bazfxhly"},{"p":"pmw0az7wi4b9","c":"pmw0bbejsmuz"},{"p":"pmw0basjbwl3","c":"pmw0bbejsmuz"},{"p":"pmw0azccxi3j","c":"pmw0bbykav9l"},{"p":"pmw0bbv2zlyk","c":"pmw0bbykav9l"},{"p":"pmw0aytbjn5t","c":"pmw0bdxve4vg"},{"p":"pmw0bdpt1f1p","c":"pmw0bdxve4vg"},{"p":"pmw0aytbjn5t","c":"pmw0bex5ygmz"},{"p":"pmw0bdpt1f1p","c":"pmw0bex5ygmz"},{"p":"pmw0aytbjn5t","c":"pmw0bf65f95c"},{"p":"pmw0bdpt1f1p","c":"pmw0bf65f95c"},{"p":"pmw0bf65f95c","c":"pmw0bfnbxqb3"},{"p":"pmw0bfjw69mw","c":"pmw0bfnbxqb3"},{"p":"pmw0bdxve4vg","c":"pmw0bj8eb4ep"},{"p":"pmw0bgbthf3j","c":"pmw0bj8eb4ep"},{"p":"pmw0bdxve4vg","c":"pmw0bjqu4uxp"},{"p":"pmw0bgbthf3j","c":"pmw0bjqu4uxp"},{"p":"pmw0azgs05va","c":"pmw0bkpd5dx8"},{"p":"pmw0bkez8cbs","c":"pmw0bkpd5dx8"},{"p":"pmw0azgs05va","c":"pmw0bkvaf8lw"},{"p":"pmw0bkez8cbs","c":"pmw0bkvaf8lw"},{"p":"pmw0azgs05va","c":"pmw0blev5rq3"},{"p":"pmw0bl5wkkzh","c":"pmw0blev5rq3"},{"p":"pmw0azgs05va","c":"pmw0blkb3z0a"},{"p":"pmw0bl5wkkzh","c":"pmw0blkb3z0a"},{"p":"pmw0ay7wmam0","c":"pmw0boidfapo"},{"p":"pmw0boe84xi3","c":"pmw0boidfapo"},{"p":"pmw0ay7wmam0","c":"pmw0boocprx0"},{"p":"pmw0boe84xi3","c":"pmw0boocprx0"},{"p":"pmw0ay7wmam0","c":"pmw0bosu8ybr"},{"p":"pmw0boe84xi3","c":"pmw0bosu8ybr"},{"p":"pmw0ay7wmam0","c":"pmw0bp2rg2jo"},{"p":"pmw0boe84xi3","c":"pmw0bp2rg2jo"},{"p":"pmw0ay7wmam0","c":"pmw0bp8oyhsz"},{"p":"pmw0boe84xi3","c":"pmw0bp8oyhsz"},{"p":"pmw0boidfapo","c":"pmw0bpyjm0u1"},{"p":"pmw0bppatqeh","c":"pmw0bpyjm0u1"},{"p":"pmw0boidfapo","c":"pmw0bqlvt56j"},{"p":"pmw0bqhb7exd","c":"pmw0bqlvt56j"},{"p":"pmw0azl525p6","c":"pmw0cclfnseh"},{"p":"pmw0cc7547ax","c":"pmw0cclfnseh"},{"p":"pmw0azl525p6","c":"pmw0cd4909gb"},{"p":"pmw0cc7547ax","c":"pmw0cd4909gb"},{"p":"pmw0bkvaf8lw","c":"pmw0cf2itdcf"},{"p":"pmw0cepihed3","c":"pmw0cf2itdcf"},{"p":"pmw0b4ttbl96","c":"pmw0ckivfl4g"},{"p":"pmw0b5r9wuwn","c":"pmw0ckivfl4g"},{"p":"pmw0ckivfl4g","c":"pmw0ckzdijs1"},{"p":"pmw0clmqe5tu","c":"pmw0ckzdijs1"},{"p":"pmw0ckivfl4g","c":"pmw0cm59k1ye"},{"p":"pmw0clmqe5tu","c":"pmw0cm59k1ye"},{"p":"pmw0ckivfl4g","c":"pmw0cmxi66he"},{"p":"pmw0clmqe5tu","c":"pmw0cmxi66he"},{"p":"pmw0ckivfl4g","c":"pmw0cnho8ij8"},{"p":"pmw0clmqe5tu","c":"pmw0cnho8ij8"},{"p":"pmw0ckzdijs1","c":"pmw0coabqn17"},{"p":"pmw0co12hqjm","c":"pmw0coabqn17"},{"p":"pmw0ckzdijs1","c":"pmw0cokerv1c"},{"p":"pmw0co12hqjm","c":"pmw0cokerv1c"},{"p":"pmw0cm59k1ye","c":"pmw0cp2olr9b"},{"p":"pmw0cotl425o","c":"pmw0cp2olr9b"},{"p":"pmw0cmxi66he","c":"pmw0cpo7i2q2"},{"p":"pmw0cphavev1","c":"pmw0cpo7i2q2"},{"p":"pmw0cmxi66he","c":"pmw0cpyc13pf"},{"p":"pmw0cphavev1","c":"pmw0cpyc13pf"},{"p":"pmw0cnho8ij8","c":"pmw0cqdlpm4k"},{"p":"pmw0cq7amgsi","c":"pmw0cqdlpm4k"},{"p":"pmw0b4ttbl96","c":"pmw0cslub888"},{"p":"pmw0b5r9wuwn","c":"pmw0cslub888"},{"p":"pmw0b4ttbl96","c":"pmw0ct0y5ysl"},{"p":"pmw0b5r9wuwn","c":"pmw0ct0y5ysl"},{"p":"pmw0b4ttbl96","c":"pmw0ctpzpx7u"},{"p":"pmw0b5r9wuwn","c":"pmw0ctpzpx7u"},{"p":"pmw0b4ttbl96","c":"pmw0cu7xj0fc"},{"p":"pmw0b5r9wuwn","c":"pmw0cu7xj0fc"},{"p":"pmw0b4ttbl96","c":"pmw0cuokh4oa"},{"p":"pmw0b5r9wuwn","c":"pmw0cuokh4oa"},{"p":"pmw0b4ttbl96","c":"pmw0cv2itoq7"},{"p":"pmw0b5r9wuwn","c":"pmw0cv2itoq7"},{"p":"pmw0b4ttbl96","c":"pmw0cvhagf59"},{"p":"pmw0b5r9wuwn","c":"pmw0cvhagf59"},{"p":"pmw0b4ttbl96","c":"pmw0cxv2jrw1"},{"p":"pmw0b5r9wuwn","c":"pmw0cxv2jrw1"},{"p":"pmw0cslub888","c":"pmw0cyxsusqa"},{"p":"pmw0cyhszrns","c":"pmw0cyxsusqa"},{"p":"pmw0cyxsusqa","c":"pmw0czcwx9j0"},{"p":"pmw0czt24n38","c":"pmw0czcwx9j0"},{"p":"pmw0cyxsusqa","c":"pmw0d0cs55q1"},{"p":"pmw0czt24n38","c":"pmw0d0cs55q1"},{"p":"pmw0cslub888","c":"pmw0d0sk8t33"},{"p":"pmw0cyhszrns","c":"pmw0d0sk8t33"},{"p":"pmw0bp2rg2jo","c":"pmw0d8eudbsw"},{"p":"pmw0d8666q7n","c":"pmw0d8eudbsw"},{"p":"pmw0bp2rg2jo","c":"pmw0dc5jjggz"},{"p":"pmw0d8666q7n","c":"pmw0dc5jjggz"}]};</script><script>
+/* ============================================================
+   1. DỮ LIỆU — mô hình 3 bảng: people / unions / links
+   ============================================================ */
+const SAMPLE = {
+  people: [
+    {id:'minh', name:'Nguyễn Văn Minh', sex:'M', birth:1962, job:'Kỹ sư cơ khí'},
+    {id:'hoa',  name:'Trần Thị Hoa',    sex:'F', birth:1965, job:'Giáo viên'},
+    {id:'lam',  name:'Nguyễn Văn Lâm',  sex:'M', birth:1935, job:'Nông nghiệp'},
+    {id:'yen',  name:'Phạm Thị Yến',    sex:'F', birth:1938},
+    {id:'quy',  name:'Trần Văn Quý',    sex:'M', birth:1937, job:'Thợ mộc'},
+    {id:'hanh', name:'Lê Thị Hạnh',     sex:'F', birth:1942},
+    {id:'to',   name:'Nguyễn Văn Tộ',   sex:'M', birth:1910, death:1978},
+    {id:'nhan', name:'Đỗ Thị Nhàn',     sex:'F', birth:1914, death:1990},
+    {id:'duc',  name:'Trần Văn Đức',    sex:'M', birth:1911, death:1985},
+    {id:'cuc',  name:'Vũ Thị Cúc',      sex:'F', birth:1916, death:1996},
+    {id:'hung', name:'Nguyễn Văn Hùng', sex:'M', birth:1958, job:'Bộ đội về hưu'},
+    {id:'lan',  name:'Nguyễn Thị Lan',  sex:'F', birth:1966, job:'Buôn bán'},
+    {id:'tuan', name:'Nguyễn Văn Tuấn', sex:'M', birth:1970, job:'Lái xe'},
+    {id:'son',  name:'Trần Văn Sơn',    sex:'M', birth:1968, job:'Thợ điện'},
+    {id:'mai',  name:'Trần Thị Mai',    sex:'F', birth:1970, job:'Kế toán'},
+    {id:'bich', name:'Nguyễn Thị Bích', sex:'F', birth:1940},
+    {id:'thu',  name:'Trịnh Thị Thu',   sex:'F', birth:1960},
+    {id:'ha',   name:'Ngô Thị Hà',      sex:'F', birth:1972},
+    {id:'phuong',name:'Lý Thị Phương',  sex:'F', birth:1972},
+    {id:'van',  name:'Hoàng Văn Vân',   sex:'M', birth:1965},
+    {id:'dung', name:'Bùi Văn Dũng',    sex:'M', birth:1968},
+    {id:'long', name:'Nguyễn Văn Long', sex:'M', birth:1988, job:'CNTT'},
+    {id:'trang',name:'Đặng Thu Trang',  sex:'F', birth:1990, job:'Dược sĩ'},
+    {id:'thao', name:'Nguyễn Thị Thảo', sex:'F', birth:1991, job:'Ngân hàng'},
+    {id:'khoa', name:'Nguyễn Văn Khoa', sex:'M', birth:1995, job:'Xây dựng'},
+    {id:'an',   name:'Nguyễn Bảo An',   sex:'F', birth:2015},
+    {id:'giahan',name:'Nguyễn Gia Hân', sex:'F', birth:2018},
+    {id:'linh', name:'Nguyễn Thị Linh', sex:'F', birth:1985, job:'Y tá'},
+    {id:'duy',  name:'Nguyễn Văn Duy',  sex:'M', birth:2005},
+    {id:'ngoc', name:'Nguyễn Thị Ngọc', sex:'F', birth:2008},
+    {id:'kien', name:'Nguyễn Văn Kiên', sex:'M', birth:2011},
+    {id:'hong', name:'Bùi Thị Hồng',   sex:'F', birth:1968},
+    {id:'sang', name:'Nguyễn Văn Sáng',sex:'M', birth:1992},
+    {id:'huong',name:'Nguyễn Thị Hương',sex:'F',birth:1995},
+    {id:'kinh', name:'Phạm Văn Kính',   sex:'M', birth:1912, death:1991},
+    {id:'mo',   name:'Hoàng Thị Mơ',    sex:'F', birth:1916, death:1998}
+  ],
+  unions: [
+    {id:'u1', partners:['minh','hoa'],  status:'now',      year:1986},
+    {id:'u2', partners:['lam','yen'],   status:'now',      year:1957},
+    {id:'u3', partners:['quy','hanh'],  status:'now',      year:1963},
+    {id:'u4', partners:['to','nhan'],   status:'now',      year:1933},
+    {id:'u5', partners:['duc','cuc'],   status:'now',      year:1935},
+    {id:'u6', partners:['hung','thu'],  status:'divorced', year:1982},
+    {id:'u7', partners:['hung','ha'],   status:'now',      year:2001},
+    {id:'u8', partners:['tuan','phuong'],status:'now',     year:1996},
+    {id:'u9', partners:['mai','dung'],  status:'now',      year:1994},
+    {id:'u10',partners:['bich','van'],  status:'now',      year:1963},
+    {id:'u11',partners:['long','trang'],status:'now',      year:2013},
+    {id:'u12',partners:['kinh','mo'],   status:'now',      year:1936},
+    {id:'u13',partners:['hung','hong'], status:'divorced', year:1990}
+  ],
+  links: [
+    {p:'lam',c:'minh'},{p:'yen',c:'minh'},
+    {p:'lam',c:'hung'},{p:'yen',c:'hung'},
+    {p:'lam',c:'lan'}, {p:'yen',c:'lan'},
+    {p:'lam',c:'tuan'},{p:'yen',c:'tuan'},
+    {p:'quy',c:'hoa'}, {p:'hanh',c:'hoa'},
+    {p:'quy',c:'son'}, {p:'hanh',c:'son'},
+    {p:'quy',c:'mai'}, {p:'hanh',c:'mai'},
+    {p:'to',  c:'lam'}, {p:'nhan',c:'lam'},
+    {p:'to',  c:'bich'},{p:'nhan',c:'bich'},
+    {p:'duc', c:'quy'}, {p:'cuc', c:'quy'},
+    {p:'kinh',c:'yen'}, {p:'mo',  c:'yen'},
+    {p:'hung',c:'linh'}, {p:'thu', c:'linh'},
+    {p:'hung',c:'duy'},  {p:'ha',  c:'duy'},
+    {p:'hung',c:'ngoc'}, {p:'ha',  c:'ngoc'},
+    {p:'hung',c:'kien'}, {p:'ha',  c:'kien'},
+    {p:'hung',c:'sang'}, {p:'hong',c:'sang'},
+    {p:'hung',c:'huong'},{p:'hong',c:'huong'},
+    {p:'minh',c:'long'},{p:'hoa', c:'long'},
+    {p:'minh',c:'thao'},{p:'hoa', c:'thao'},
+    {p:'minh',c:'khoa'},{p:'hoa', c:'khoa'},
+    {p:'long',c:'an'},  {p:'trang',c:'an'},
+    {p:'long',c:'giahan'},{p:'trang',c:'giahan'}
+  ]
+};
+
+const say = m => { try { alert(m); } catch(e){} };
+const STORE_KEY = 'giapha_v3';
+const UI_KEY = 'giapha_v3_ui';
+let UI = (function(){ try { return JSON.parse(localStorage.getItem(UI_KEY) || '{}'); } catch(e){ return {}; } })();
+function saveUI(){ try { localStorage.setItem(UI_KEY, JSON.stringify(UI)); } catch(e){} }
+function homeUnion(){
+  if(UI.home && U.get(UI.home)) return UI.home;
+  return DB.unions.length ? DB.unions[0].id : null;
+}
+let P = new Map(), U = new Map();
+
+const READONLY = !!window.__DATA__;   /* file xuất để xem trên điện thoại */
+let DB = (function(){
+  if(window.__DATA__) return JSON.parse(JSON.stringify(window.__DATA__));
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw) return JSON.parse(raw);
+  } catch(e){}
+  return JSON.parse(JSON.stringify(SAMPLE));
+})();
+
+function reindex(){
+  P = new Map(DB.people.map(p => [p.id, p]));
+  U = new Map(DB.unions.map(u => [u.id, u]));
+}
+function save(){
+  if(READONLY) return true;
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(DB)); return true; }
+  catch(e){
+    console.warn('Không lưu được localStorage', e);
+    say('Bộ nhớ trình duyệt đã đầy (ảnh chiếm nhiều chỗ). Hãy xoá bớt ảnh, hoặc Xuất JSON để sao lưu rồi bớt dữ liệu.');
+    return false;
+  }
+}
+function persist(){ save(); refreshUndo(); }
+
+/* hoàn tác */
+const undoStack = [];
+function snapshot(){
+  undoStack.push(JSON.stringify(DB));
+  if(undoStack.length > 30) undoStack.shift();
+  refreshUndo();
+}
+function refreshUndo(){
+  const b = document.getElementById('undoBtn');
+  if(b) b.disabled = undoStack.length === 0;
+}
+function undo(){
+  if(!undoStack.length) return;
+  DB = JSON.parse(undoStack.pop());
+  reindex(); save();
+  if(editingId && !P.get(editingId)) closeSheet(); else if(editingId) drawSheet();
+  render(); refreshUndo();
+}
+reindex();
+const parentsOf = id => DB.links.filter(l => l.c === id).map(l => l.p);
+
+function childrenOfUnion(uid){
+  const u = U.get(uid); if(!u) return [];
+  return DB.people.filter(p=>{
+    const par = parentsOf(p.id);
+    return par.length > 0 && par.every(x => u.partners.includes(x));
+  });
+}
+function unionOfChild(id){
+  const par = parentsOf(id);
+  if(!par.length) return null;
+  return DB.unions.find(u => par.every(x => u.partners.includes(x))) || null;
+}
+function unionsOfPerson(id){ return DB.unions.filter(u => u.partners.includes(id)); }
+function kidsOfPerson(id){
+  const seen = new Set(), out = [];
+  unionsOfPerson(id).forEach(u => childrenOfUnion(u.id).forEach(c => {
+    if(!seen.has(c.id)){ seen.add(c.id); out.push(c); }
+  }));
+  return out.sort((a, b) => yBirth(a) - yBirth(b));
+}
+function currentSpouseOf(id){
+  const u = unionsOfPerson(id).find(u => u.status === 'now');
+  if(!u) return null;
+  return u.partners.find(x => x !== id) || null;
+}
+const yBirth = p => p.birth || 9999;
+
+/* ============================================================
+   2. BỐ CỤC — hai cánh
+   ============================================================ */
+const CARD_W = 136, CARD_H = 92, PITCH = 150, ROW_H = 205, PAD_X = 190, PAD_Y = 96;
+const BASE = 92, MAXUP = 2, EX_GAP = 44;   /* BASE = nửa khoảng cách cặp trung tâm */
+
+/* vợ/chồng của một người ngoài trục → block [vợ cũ] [người] [vợ hiện tại] */
+function blockOf(pid, kind, refPid, sign){
+  const us = unionsOfPerson(pid);
+  const cur = us.find(u => u.status === 'now');
+  const out = [];
+  /* hôn nhân cũ chỉ hiện ở hộ đang xem, không kéo vào cánh */
+  out.push({pid, kind, refPid});
+  if(cur){
+    const o = cur.partners.find(x => x !== pid);
+    if(o) out.push({pid:o, kind:'spouse', refPid:pid, ex:false});
+  }
+  /* cặp đôi: đàn ông đứng bên trái trên màn hình */
+  if(out.length === 2){
+    const firstMale = P.get(out[0].pid).sex === 'M';
+    if((sign < 0 && firstMale) || (sign > 0 && !firstMale)) out.reverse();
+  }
+  return out;
+}
+
+/* dựng một cánh: trục tổ tiên + anh chị em, xếp từ trong (gần tâm) ra ngoài */
+function buildSide(anchorId, side, put, baseDepth, startIdx, exSet){
+  startIdx = startIdx || 1;
+  baseDepth = baseDepth || 0;
+  const pad = baseDepth ? 0.6 : 0;
+  const sign = side;
+
+  /* 1. các hàng tổ tiên — thứ tự cha mẹ bám theo thứ tự của con ở hàng dưới */
+  const anc = new Map();
+  let prevRow = [anchorId];
+  for(let d = -1; d >= -MAXUP; d--){
+    const row = [];
+    prevRow.forEach(pid => {
+      const pu = unionOfChild(pid); if(!pu) return;
+      const pars = pu.partners.filter(x => parentsOf(pid).includes(x));
+      if(!pars.length) return;
+      pars.sort((a,b)=>{
+        const ma = P.get(a).sex === 'M' ? 0 : 1;
+        const mb = P.get(b).sex === 'M' ? 0 : 1;
+        return sign < 0 ? mb - ma : ma - mb;      /* nam luôn bên trái trên màn hình */
+      });
+      pars.forEach(x => row.push({pid:x, child:pid}));
+    });
+    if(!row.length) break;
+    anc.set(d, row);
+    prevRow = row.map(r => r.pid);
+  }
+
+  /* 2. anh chị em của từng người trên trục */
+  const sibsAt = new Map();
+  const addSibs = (pid, depth) => {
+    const pu = unionOfChild(pid); if(!pu) return;
+    const list = childrenOfUnion(pu.id).filter(x => x.id !== pid);
+    if(!list.length) return;
+    list.sort((a,b)=> yBirth(b) - yBirth(a));       /* em út gần tâm, anh cả xa tâm */
+    if(!sibsAt.has(depth)) sibsAt.set(depth, []);
+    list.forEach(x => sibsAt.get(depth).push({pid:x.id, refPid:pid}));
+  };
+  addSibs(anchorId, 0);   /* chỉ mở anh chị em của chính hộ đang xem */
+
+  /* 3. rải theo hàng, từ trong ra ngoài */
+  const emit = (depth, items, startIdx) => {
+    items.forEach((it, i) => {
+      put({pid:it.pid, depth, side:sign, x: sign * (BASE + PITCH * (startIdx + i + pad)),
+           kind:it.kind, refPid:it.refPid, ex:!!it.ex});
+    });
+  };
+
+  if(baseDepth !== 0) emit(baseDepth, [{pid:anchorId, kind:'ancestor'}], 0);
+
+  /* hàng anh/chị/em: mỗi người một "hộ thu nhỏ" — vợ/chồng hiện tại + các đời cũ, mỗi đời một cột */
+  const wide = !!state.wide;
+  const groups0 = [];
+
+  (sibsAt.get(0) || []).forEach(s => {
+    const couple = blockOf(s.pid, 'sibling', s.refPid, sign);
+    const units = [];
+
+    const curU = unionsOfPerson(s.pid).find(u => u.status === 'now');
+    const curKids = (wide && curU) ? childrenOfUnion(curU.id).slice().sort((a,b)=> yBirth(a) - yBirth(b)) : [];
+    units.push({ id: 'c_' + s.pid, cards: couple, kids: curKids, ex: false });
+
+    unionsOfPerson(s.pid).filter(u => u !== curU).forEach(u => {
+      const o = u.partners.find(x => x !== s.pid);
+      if(!o) return;
+      if(!wide) return;                      /* tắt mở rộng: chỉ hiện vợ/chồng hiện tại */
+      const ks = childrenOfUnion(u.id).slice().sort((a,b)=> yBirth(a) - yBirth(b));
+      units.push({ id: 'e_' + u.id, unionId: u.id,
+                   cards: [{ pid: o, kind: 'exspouse', unionId: u.id, refPid: s.pid }],
+                   kids: ks, ex: true });
+    });
+
+    units.forEach(u => { u.w = Math.max(u.cards.length, u.kids.length) * PITCH; });
+    groups0.push({ pid: s.pid, units, w: units.reduce((a, u) => a + u.w, 0) });
+  });
+
+  let cursor = BASE + PITCH * startIdx;
+  groups0.forEach(g => {
+    g.units.forEach(u => {
+      const cStart = cursor + (u.w - (u.cards.length - 1) * PITCH) / 2;
+      u.cards.forEach((it, i) => put({
+        pid: it.pid, depth: baseDepth, side: sign, kind: it.kind,
+        refPid: it.refPid, ex: !!it.ex, unionId: it.unionId,
+        x: sign * (cStart + i * PITCH)
+      }));
+
+      if(u.ex) exSet.add(u.unionId);
+
+      if(u.kids.length){
+        const kStart = cursor + (u.w - (u.kids.length - 1) * PITCH) / 2;
+        const cCenter = cStart + ((u.cards.length - 1) * PITCH) / 2;
+        const railX = sign * (u.ex ? cStart : cCenter);
+        u.kids.forEach((k, i) => put({
+          pid: k.id, depth: baseDepth + 1, side: sign, kind: 'nephew',
+          railKey: 'u_' + u.id, railX, step: u.ex,
+          x: sign * (kStart + i * PITCH)
+        }));
+      }
+      cursor += u.w;
+    });
+  });
+
+  for(const [d, row] of anc){
+    /* cặp cha mẹ phải đứng cạnh nhau, anh chị em của họ xếp ra phía ngoài */
+    const items = row.map(r => ({pid:r.pid, kind:'ancestor', refPid:r.child}));
+    row.slice().reverse().forEach(r => {
+      (sibsAt.get(d) || []).filter(s => s.refPid === r.pid)
+        .forEach(s => items.push(...blockOf(s.pid, 'sibling', s.refPid, sign)));
+    });
+    emit(baseDepth + d, items, Math.abs(d) + 1);
+  }
+}
+
+function getFocus(id){ return U.get(id) || U.get('u1'); }
+
+function layout(focusId, showStep){
+  const focus = getFocus(focusId);
+  const hId = focus.partners.find(p => P.get(p).sex === 'M') || focus.partners[0];
+  const wId = focus.partners.find(p => P.get(p).sex === 'F' && p !== hId) || null;
+  const mid = wId ? 0 : -BASE;
+
+  const cards = [], seen = new Set();
+  const put = c => { if(seen.has(c.pid)) return; seen.add(c.pid); cards.push(c); };
+
+  put({pid:hId, depth:0, side:-1, x:-BASE, kind:'focus'});
+  if(wId) put({pid:wId, depth:0, side:1, x:BASE, kind:'focus'});
+
+  /* --- con của hộ, tính trước để biết chỗ dành cho các khối vợ/chồng cũ --- */
+  const kids = childrenOfUnion(focusId).slice().sort((a,b)=>{
+    if((a.sibOrder ?? 99) !== (b.sibOrder ?? 99)) return (a.sibOrder ?? 99) - (b.sibOrder ?? 99);
+    return yBirth(a) - yBirth(b);
+  });
+  /* --- con + cháu: mỗi gia đình một khe, khe rộng theo số cháu --- */
+  const units = kids.map(k=>{
+    const sp = currentSpouseOf(k.id);
+    const gu = DB.unions.find(u => u.partners.includes(k.id) && (!sp || u.partners.includes(sp)));
+    const gk = gu ? childrenOfUnion(gu.id).slice().sort((a,b)=> yBirth(a) - yBirth(b)) : [];
+    const hasSp = !!sp && !seen.has(sp);
+    return {k, sp: hasSp ? sp : null, gk,
+            slot: Math.max((hasSp ? 2 : 1) * PITCH, gk.length * PITCH + 40)};
+  });
+  const totalW = units.reduce((a,u)=> a + u.slot, 0);
+  let curX = mid - totalW / 2;
+  const ownNodes = [];
+  const row2 = [];
+
+  units.forEach(u=>{
+    const center = curX + u.slot / 2;
+    if(u.sp){
+      const a = {pid:u.k.id, depth:1, side:0, kind:'child', x: center - PITCH/2};
+      const b = {pid:u.sp, depth:1, side:0, kind:'inlaw', refPid:u.k.id, x: center + PITCH/2};
+      put(a); put(b); ownNodes.push(a, b);
+    } else {
+      const a = {pid:u.k.id, depth:1, side:0, kind:'child', x: center};
+      put(a); ownNodes.push(a);
+    }
+    u.gk.forEach((g, i) => row2.push({pid:g.id, depth:2, side:0, kind:'grandchild',
+      x: center - (u.gk.length * PITCH) / 2 + (i + 0.5) * PITCH}));
+    curX += u.slot;
+  });
+
+  /* --- hôn nhân khác: mỗi đời một cột, con treo ngay dưới chân người vợ/chồng đó --- */
+  const others = (pid, exclude) => unionsOfPerson(pid).filter(u => u.id !== exclude);
+  const hEx = others(hId, focusId);
+  const wEx = wId ? others(wId, focusId) : [];
+  const exUnions = new Set();
+
+  let leftEdge  = ownNodes.length ? Math.min(...ownNodes.map(n => n.x)) - CARD_W/2 : mid - CARD_W/2;
+  let rightEdge = ownNodes.length ? Math.max(...ownNodes.map(n => n.x)) + CARD_W/2 : mid + CARD_W/2;
+
+  const placeEx = (u, anchorId, dir) => {
+    const other = u.partners.find(x => x !== anchorId);
+    if(!other) return;
+    exUnions.add(u.id);
+    const ks = showStep ? childrenOfUnion(u.id).sort((a,b)=> yBirth(a) - yBirth(b)) : [];
+    const w = Math.max(1, ks.length) * PITCH;
+    /* cách người ở tâm >= 1 cột; cột rộng theo số con nên càng nhiều con càng tách xa */
+    const gapEx = PITCH;
+    let startX;
+    if(dir < 0){
+      const bound = -BASE - CARD_W/2 - gapEx;
+      startX = Math.min(leftEdge - gapEx - w, bound - w);
+      leftEdge = startX;
+    } else {
+      const bound = BASE + CARD_W/2 + gapEx;
+      startX = Math.max(rightEdge + gapEx, bound);
+      rightEdge = startX + w;
+    }
+    const wifeX = startX + w/2;
+    put({pid:other, depth:0, side:dir, x:wifeX, kind:'exspouse', unionId:u.id});
+
+    ks.forEach((k, i) => {
+      if(seen.has(k.id)) return;
+      put({pid:k.id, depth:1, side:dir, kind:'stepchild', unionId:u.id,
+           stepLabel: 'Con riêng của ' + (P.get(anchorId).sex === 'M' ? 'bố' : 'mẹ'),
+           x: startX + (i + 0.5) * PITCH});
+    });
+  };
+  hEx.forEach(u => placeEx(u, hId, -1));
+  wEx.forEach(u => placeEx(u, wId, 1));
+
+  /* anh chị em của hộ — bắt đầu ngoài các khối vợ/chồng cũ */
+  const sibStartL = Math.max(1, Math.ceil((-leftEdge  + 0.6 * PITCH - BASE) / PITCH));
+  const sibStartR = Math.max(1, Math.ceil(( rightEdge + 0.6 * PITCH - BASE) / PITCH));
+
+  buildSide(hId, -1, put, 0, sibStartL, exUnions);
+  if(wId) buildSide(wId, 1, put, 0, sibStartR, exUnions);
+
+  row2.forEach(n => put(n));
+
+  /* nhãn quan hệ — 2 lượt để dâu/rể đọc được nhãn của người bên cạnh */
+  const roleMap = new Map();
+  let pending = cards.filter(n => n.kind !== 'spouse');
+  for(let pass = 0; pass < 4 && pending.length; pass++){
+    const next = [];
+    pending.forEach(n => {
+      if(n.kind === 'ancestor' && n.depth <= -2 && !roleMap.has(n.refPid)){ next.push(n); return; }
+      n.role = roleOf(n, focus, roleMap);
+      roleMap.set(n.pid, n.role);
+    });
+    pending = next;
+  }
+  cards.forEach(n => {
+    if(n.kind !== 'spouse') return;
+    n.refRole = roleMap.get(n.refPid) || '';
+    n.role = roleOf(n, focus, roleMap);
+  });
+
+  /* toạ độ tuyệt đối */
+  const depths = cards.map(n => n.depth);
+  const minD = Math.min(...depths), maxD = Math.max(...depths);
+  const leftMost = Math.min(...cards.map(n => n.x)) - CARD_W/2;
+  const off = PAD_X - leftMost;
+  cards.forEach(n => {
+    n.y  = PAD_Y + (n.depth - minD) * ROW_H;
+    n.cx = n.x + off;
+  });
+
+  return {focus, hId, wId, nodes:cards, minD, maxD, mid: mid + off, exUnions, off};
+}
+
+function roleOf(n, focus, roleMap){
+  if(n.stepLabel) return n.stepLabel;
+  const p = P.get(n.pid);
+  const male = p.sex === 'M';
+  if(n.kind === 'focus'){
+    if(!childrenOfUnion(focus.id).length && focus.partners.length < 2) return '';
+    return male ? 'Bố' : 'Mẹ';
+  }
+  if(n.kind === 'ancestor'){
+    if(n.depth === -1) return male ? (n.side < 0 ? 'Ông nội' : 'Ông ngoại')
+                                   : (n.side < 0 ? 'Bà nội' : 'Bà ngoại');
+    const childRole = (roleMap && roleMap.get(n.refPid)) || '';
+    return childRole ? 'Bố mẹ ' + childRole.toLowerCase() : 'Cụ';
+  }
+  if(n.kind === 'sibling'){
+    const ref = P.get(n.refPid);
+    if(n.depth <= -1) return male ? 'Ông' : 'Bà cô';
+    const older = yBirth(p) < yBirth(ref);
+    if(ref.sex === 'M') return male ? (older ? 'Bác' : 'Chú') : 'Cô';
+    return male ? 'Cậu' : 'Dì';
+  }
+  if(n.kind === 'spouse'){
+    const map = {'Bác':'Bác gái','Chú':'Thím','Cô':'Dượng','Cậu':'Mợ','Dì':'Dượng','Ông':'Bà','Bà':'Ông','Bà cô':'Ông'};
+    const base = map[n.refRole] || '';
+    const sfx = n.ex ? ' (cũ)' : '';
+    if(base) return base + sfx;
+    return (male ? 'Chồng' : 'Vợ') + sfx;
+  }
+  if(n.kind === 'exspouse'){
+    const u = U.get(n.unionId);
+    const st = u ? u.status : 'divorced';
+    const base = male ? 'Chồng' : 'Vợ';
+    return st === 'now' ? base + ' hiện tại' : (st === 'widowed' ? base + ' trước' : base + ' cũ');
+  }
+  if(n.kind === 'child') return male ? 'Con trai' : 'Con gái';
+  if(n.kind === 'inlaw') return male ? 'Rể' : 'Dâu';
+  if(n.kind === 'grandchild' || n.kind === 'nephew') return male ? 'Cháu trai' : 'Cháu gái';
+  return '';
+}
+
+/* ============================================================
+   3. VẼ
+   ============================================================ */
+const state = { focus:'u1', home:'u1', stack:[], zoom:null, _last:null, showStep:true, wide:false };
+const canvas = document.getElementById('canvas');
+const wires  = document.getElementById('wires');
+const cards  = document.getElementById('cards');
+const stage  = document.getElementById('stage');
+const SVGNS  = 'http://www.w3.org/2000/svg';
+
+function el(tag, cls, html){
+  const d = document.createElement(tag);
+  if(cls) d.className = cls;
+  if(html != null) d.innerHTML = html;
+  return d;
+}
+function path(d, dashed){
+  const p = document.createElementNS(SVGNS, 'path');
+  p.setAttribute('d', d);
+  p.setAttribute('fill', 'none');
+  p.setAttribute('stroke', dashed ? '#8A94AB' : '#A6B3CA');
+  p.setAttribute('stroke-width', dashed ? 2 : 2.2);
+  p.setAttribute('stroke-linejoin', 'round');
+  if(dashed) p.setAttribute('stroke-dasharray', '5 4');
+  wires.appendChild(p);
+}
+function marriageline(a, b, dashed){
+  const y = a.y + CARD_H/2;
+  const x1 = a.x < b.x ? a.cx + CARD_W/2 : a.cx - CARD_W/2;
+  const x2 = a.x < b.x ? b.cx - CARD_W/2 : b.cx + CARD_W/2;
+  const l = document.createElementNS(SVGNS, 'line');
+  l.setAttribute('x1', x1); l.setAttribute('y1', y);
+  l.setAttribute('x2', x2); l.setAttribute('y2', y);
+  l.setAttribute('stroke', dashed ? '#8A94AB' : '#011554');
+  l.setAttribute('stroke-width', dashed ? 2 : 2.5);
+  if(dashed) l.setAttribute('stroke-dasharray', '5 4');
+  wires.appendChild(l);
+}
+
+function zoomScale(){
+  const w = parseFloat(canvas.style.width) || 1000;
+  return state.zoom != null ? state.zoom
+    : Math.max(0.2, Math.min(1, (stage.clientWidth - 40) / w));
+}
+function applyZoom(){
+  const s = zoomScale();
+  const old = state._last;
+  canvas.style.zoom = s;
+  if(old && Math.abs(old - s) > 0.001){
+    const k = s / old;
+    stage.scrollLeft = Math.max(0, (stage.scrollLeft + stage.clientWidth  / 2) * k - stage.clientWidth  / 2);
+    stage.scrollTop  = Math.max(0, (stage.scrollTop  + stage.clientHeight / 2) * k - stage.clientHeight / 2);
+  }
+  state._last = s;
+  const lbl = document.getElementById('zoomLbl');
+  if(lbl) lbl.textContent = Math.round(s * 100) + '%';
+}
+function setZoom(z){
+  state.zoom = Math.max(0.3, Math.min(2.5, z));
+  applyZoom();
+}
+
+function render(){
+  const emptyEl = document.getElementById('empty');
+  if(!DB.people.length){
+    emptyEl.style.display = 'grid';
+    canvas.style.display = 'none';
+    cards.innerHTML = ''; wires.innerHTML = '';
+    document.getElementById('focusPill').textContent = 'Chưa có dữ liệu';
+    document.getElementById('backBtn').disabled = true;
+    return;
+  }
+  emptyEl.style.display = 'none';
+  canvas.style.display = '';
+
+  if(!U.get(state.focus)){
+    const u = DB.unions[0];
+    if(u) state.focus = u.id;
+    else {
+      const nu = { id: uid('u'), partners: [DB.people[0].id], status: 'now' };
+      DB.unions.push(nu); reindex(); save(); state.focus = nu.id;
+    }
+  }
+
+  const L = layout(state.focus, state.showStep);
+  const byPid = new Map(L.nodes.map(n => [n.pid, n]));
+  const focus = L.focus;
+
+  /* --- kích thước khung vẽ --- */
+  const xs = L.nodes.map(n => n.cx);
+  const width  = Math.max(...xs) + CARD_W/2 + PAD_X + 60;
+  const height = PAD_Y * 2 + (L.maxD - L.minD) * ROW_H + CARD_H;
+  canvas.style.width  = width + 'px';
+  canvas.style.height = height + 'px';
+  wires.setAttribute('width', width);
+  wires.setAttribute('height', height);
+  wires.innerHTML = '';
+  cards.innerHTML = '';
+  canvas.querySelectorAll('.winglabel, .generation').forEach(e => e.remove());
+
+  /* --- nền hai cánh --- */
+  const wingBox = side => {
+    const list = L.nodes.filter(n => n.side === side);
+    if(list.length < 2) return null;
+    const x1 = Math.min(...list.map(n => n.cx)) - CARD_W/2 - 28;
+    const x2 = Math.max(...list.map(n => n.cx)) + CARD_W/2 + 28;
+    const y1 = PAD_Y - 40;
+    const y2 = Math.max(...list.map(n => n.y)) + CARD_H + 30;
+    return {x1, x2, y1, y2};
+  };
+  const defs = document.createElementNS(SVGNS, 'defs');
+  [['wingL', '1', '0', '#011554', '0.12', '0.015'],
+   ['wingR', '0', '1', '#F0A92B', '0.20', '0.03']].forEach(([id, x1, x2, col, o1, o2])=>{
+    const g = document.createElementNS(SVGNS, 'linearGradient');
+    g.setAttribute('id', id);
+    g.setAttribute('x1', x1); g.setAttribute('y1', '0');
+    g.setAttribute('x2', x2); g.setAttribute('y2', '0');
+    [[0, o1], [1, o2]].forEach(([off, op])=>{
+      const st = document.createElementNS(SVGNS, 'stop');
+      st.setAttribute('offset', off);
+      st.setAttribute('stop-color', col);
+      st.setAttribute('stop-opacity', op);
+      g.appendChild(st);
+    });
+    defs.appendChild(g);
+  });
+  wires.appendChild(defs);
+
+  [-1, 1].forEach(side=>{
+    const b = wingBox(side);
+    if(!b) return;
+    const r = document.createElementNS(SVGNS, 'rect');
+    r.setAttribute('x', b.x1); r.setAttribute('y', b.y1);
+    r.setAttribute('width', b.x2 - b.x1); r.setAttribute('height', b.y2 - b.y1);
+    r.setAttribute('rx', 30);
+    r.setAttribute('fill', side < 0 ? 'url(#wingL)' : 'url(#wingR)');
+    wires.appendChild(r);
+  });
+
+  /* trục giữa */
+  const spine = document.createElementNS(SVGNS, 'line');
+  spine.setAttribute('x1', L.mid); spine.setAttribute('x2', L.mid);
+  spine.setAttribute('y1', PAD_Y - 30);
+  spine.setAttribute('y2', Math.max(...L.nodes.map(n => n.y)) + CARD_H + 26);
+  spine.setAttribute('stroke', 'rgba(1,21,84,.16)');
+  spine.setAttribute('stroke-dasharray', '3 7');
+  wires.appendChild(spine);
+
+  /* --- nhãn hai cánh --- */
+  const leftBox = wingBox(-1), rightBox = wingBox(1);
+  if(leftBox){
+    const d = el('div','winglabel', 'BÊN NỘI · HỌ NHÀ TRAI');
+    d.style.left = leftBox.x1 + 24 + 'px'; d.style.top = leftBox.y1 + 16 + 'px';
+    canvas.appendChild(d);
+  }
+  if(rightBox){
+    const d = el('div','winglabel', 'BÊN NGOẠI · HỌ NHÀ GÁI');
+    d.style.left = rightBox.x1 + 24 + 'px'; d.style.top = rightBox.y1 + 16 + 'px';
+    canvas.appendChild(d);
+  }
+
+  /* --- nhãn đời --- */
+  const ROWNAME = {'-3':'CỤ CỤ','-2':'CỤ','-1':'ÔNG BÀ','0':'BỐ MẸ','1':'CON','2':'CHÁU','3':'CHẮT'};
+  const rowName = d => ROWNAME[String(d)] || (d < 0 ? 'CỤ' : 'CHÁU');
+  for(let d = L.minD; d <= L.maxD; d++){
+    if(!L.nodes.some(n => n.depth === d)) continue;
+    const lab = el('div','generation', rowName(d));
+    lab.style.left = '14px';
+    lab.style.top  = (PAD_Y + (d - L.minD) * ROW_H + CARD_H/2 - 26) + 'px';
+    canvas.appendChild(lab);
+  }
+
+  /* --- dây --- */
+  /* hôn nhân */
+  let exBus = 0;
+  DB.unions.forEach(u=>{
+    const ns = u.partners.map(p => byPid.get(p)).filter(Boolean);
+    if(ns.length < 2) return;
+    if(Math.abs(ns[0].depth - ns[1].depth) > 0.01) return;
+    if(L.exUnions && L.exUnions.has(u.id)){
+      const anchor = ns.find(n => L.focus.partners.indexOf(n.pid) >= 0) || ns[0];
+      const wife   = ns.find(n => n !== anchor) || ns[1];
+      const y = anchor.y - 16 - exBus * 16;
+      exBus++;
+      const p2 = document.createElementNS(SVGNS, 'path');
+      p2.setAttribute('d', `M ${anchor.cx} ${anchor.y} V ${y} H ${wife.cx} V ${wife.y}`);
+      p2.setAttribute('fill', 'none');
+      p2.setAttribute('stroke', '#8A94AB');
+      p2.setAttribute('stroke-width', '2');
+      p2.setAttribute('stroke-dasharray', '5 4');
+      wires.appendChild(p2);
+    } else {
+      marriageline(ns[0], ns[1], u.status === 'divorced');
+    }
+  });
+
+  /* chọn độ cao thanh nối: mặc định cùng một mức, chỉ nâng khi đè lên thanh khác */
+  const railSlots = new Map();
+  function pickRailY(fromY, kidY, x1, x2){
+    const key = Math.round(fromY);
+    const used = railSlots.get(key) || [];
+    const clash = k => used.some(r => r.k === k && !(x2 < r.x1 - 12 || x1 > r.x2 + 12));
+    let k = 0;
+    while(clash(k)) k++;
+    used.push({ k, x1, x2 });
+    railSlots.set(key, used);
+    return Math.min(fromY + 26 + k * 22, kidY - 26);
+  }
+
+  /* cha mẹ → con: mỗi hộ một thanh ngang, rồi thả nhánh xuống từng con */
+  const groups = new Map();
+  L.nodes.forEach(n=>{
+    if(n.railKey) return;                 /* cháu trong cánh: vẽ thanh riêng bên dưới */
+    const pu = unionOfChild(n.pid);
+    if(!pu) return;
+    if(!groups.has(pu.id)) groups.set(pu.id, []);
+    groups.get(pu.id).push(n);
+  });
+
+  for(const [uid, kids] of groups){
+    const parIds = [...new Set(kids.flatMap(k => parentsOf(k.pid)))];
+    const parNodes = parIds.map(id => byPid.get(id)).filter(Boolean);
+    if(!parNodes.length) continue;
+
+    const parentY = Math.min(...parNodes.map(p => p.y));
+    const rowPar = parNodes.filter(p => p.y === parentY);
+    let dropX = rowPar.length > 1
+      ? (Math.min(...rowPar.map(p => p.cx)) + Math.max(...rowPar.map(p => p.cx))) / 2
+      : rowPar[0].cx;
+    /* hôn nhân cũ: con treo ngay dưới chân người vợ/chồng, không kéo về giữa cặp */
+    if(L.exUnions && L.exUnions.has(uid)){
+      const outsider = rowPar.find(p => L.focus.partners.indexOf(p.pid) < 0);
+      if(outsider) dropX = outsider.cx;
+    }
+
+    const fromY = parentY + CARD_H;
+    const kidY  = Math.min(...kids.map(k => k.y));
+    if(kidY <= fromY) { kids.forEach(k => path(`M ${k.cx} ${fromY} V ${k.y}`, false)); continue; }
+    const xs = kids.map(k => k.cx);
+    const x1 = Math.min(dropX, ...xs), x2 = Math.max(dropX, ...xs);
+    const railY = pickRailY(fromY, kidY, x1, x2);
+
+    const un = U.get(uid);
+    const dash = (L.exUnions && L.exUnions.has(uid)) || (un && un.status !== 'now');
+    path(`M ${dropX} ${fromY} V ${railY}`, dash);
+    if(x2 - x1 > 1) path(`M ${x1} ${railY} H ${x2}`, dash);
+    kids.forEach(k => path(`M ${k.cx} ${railY} V ${k.y}`, dash));
+  }
+
+  /* --- thanh nối cụm cháu (con anh/chị em) --- */
+  const railGroups = new Map();
+  L.nodes.filter(n => n.railKey).forEach(n => {
+    if(!railGroups.has(n.railKey)) railGroups.set(n.railKey, { railX: n.railX + (L.off || 0), nodes: [] });
+    railGroups.get(n.railKey).nodes.push(n);
+  });
+  railGroups.forEach(g => {
+    const kidY = Math.min(...g.nodes.map(k => k.y));
+    const fromY = kidY - ROW_H + CARD_H;
+    const xs = g.nodes.map(k => k.cx);
+    const x1 = Math.min(g.railX, ...xs), x2 = Math.max(g.railX, ...xs);
+    const railY = pickRailY(fromY, kidY, x1, x2);
+    path(`M ${g.railX} ${fromY} V ${railY}`, false);
+    if(x2 - x1 > 1) path(`M ${x1} ${railY} H ${x2}`, false);
+    g.nodes.forEach(k => path(`M ${k.cx} ${railY} V ${k.y}`, !!k.step));
+  });
+
+  /* --- thẻ --- */
+  L.nodes.forEach(n=>{
+    const p = P.get(n.pid);
+    const c = el('div', 'card' + (p.sex === 'F' ? ' f' : '') +
+                       (focus.partners.includes(n.pid) ? ' focus' : '') +
+                       (n.kind === 'exspouse' ? ' ex' : '') +
+                       (n.kind === 'stepchild' || n.step ? ' step' : ''));
+    c.style.left = (n.cx - CARD_W/2) + 'px';
+    c.style.top  = n.y + 'px';
+    const initials = p.name.trim().split(/\s+/).slice(-2).map(w => w[0]).join('');
+    const avatarHtml = p.photo
+      ? `<div class="avatar" style="background:#fff url('${p.photo}') center/cover no-repeat"></div>`
+      : `<div class="avatar">${initials}</div>`;
+    const yrs = p.birth ? (p.death ? p.birth + '–' + p.death : p.birth + '') : '';
+    c.innerHTML =
+      `${avatarHtml}
+       <div class="cbody">
+         <div class="name">${p.name.replace(/^(Nguyễn|Trần|Lê|Phạm|Đỗ|Vũ|Ngô|Lý|Hoàng|Bùi|Trịnh|Đặng)\s/, '')}</div>
+         <div class="years">${yrs}</div>
+         <div class="role${(n.role || '').length > 12 ? ' long' : ''}">${n.role || ''}</div>
+       </div><button class="cbtn" title="Lấy hộ này làm tâm">◎</button>`;
+
+    /* chip số con ẩn */
+    let hidden = 0;
+    if(n.kind === 'exspouse'){
+      hidden = state.showStep ? 0
+        : childrenOfUnion(n.unionId).filter(ch => !byPid.has(ch.id)).length;
+    } else {
+      const us = unionsOfPerson(n.pid);
+      us.forEach(u => { hidden += childrenOfUnion(u.id).filter(ch => !byPid.has(ch.id)).length; });
+    }
+    if(hidden > 0){
+      const ch = el('span','chip', String(hidden));
+      c.appendChild(ch);
+    }
+
+    /* bấm: mở hồ sơ · nhấp đúp: lấy hộ làm tâm */
+    const us2 = unionsOfPerson(n.pid);
+    const target = n.kind === 'exspouse'
+      ? (childrenOfUnion(n.unionId).length ? U.get(n.unionId) : null)
+      : (us2.find(u => u.status === 'now') || us2[0]);
+    c.addEventListener('click', ()=>{
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => openSheet(n.pid), 220);
+    });
+    c.title = 'Bấm: hồ sơ · nhấp đúp hoặc nút ◎: lấy làm tâm';
+    c.addEventListener('dblclick', ()=>{ clearTimeout(clickTimer); focusPerson(n.pid); });
+    const kb = c.querySelector('.cbtn');
+    if(kb) kb.addEventListener('click', e => { e.stopPropagation(); focusPerson(n.pid); });
+    cards.appendChild(c);
+  });
+
+  /* --- thanh tiêu đề --- */
+  const hp = focus.partners.map(p => P.get(p));
+  const name = hp.length > 1
+    ? `${hp[0].sex === 'M' ? 'ông' : 'bà'} ${hp[0].name} ═ ${hp[1].sex === 'M' ? 'ông' : 'bà'} ${hp[1].name}`
+    : `${hp[0].sex === 'M' ? 'ông' : 'bà'} ${hp[0].name}`;
+  const nKids = childrenOfUnion(focus.id).length;
+  let nGrand = 0;
+  childrenOfUnion(focus.id).forEach(k=>{
+    const sp = currentSpouseOf(k.id);
+    const gu = DB.unions.find(u => u.partners.includes(k.id) && (!sp || u.partners.includes(sp)));
+    if(gu) nGrand += childrenOfUnion(gu.id).length;
+  });
+  document.getElementById('focusPill').innerHTML =
+    `<b>Đang xem:</b> ${name} · ${nKids} con · ${nGrand} cháu`;
+  document.getElementById('backBtn').disabled = state.stack.length === 0;
+
+  /* cuộn về giữa */
+  requestAnimationFrame(()=>{
+    const s = zoomScale();
+    canvas.style.zoom = s;
+    state._last = s;
+    const lbl = document.getElementById('zoomLbl');
+    if(lbl) lbl.textContent = Math.round(s * 100) + '%';
+    stage.scrollLeft = Math.max(0, L.mid * s - stage.clientWidth/2);
+  });
+  window.__layout = L;
+}
+
+
+/* ============================================================
+   4. HỒ SƠ NGƯỜI — xem, sửa, thêm người thân, xoá
+   ============================================================ */
+const sheetEl = document.getElementById('sheet');
+const scrimEl = document.getElementById('scrim');
+const bodyEl  = document.getElementById('sheetBody');
+let editingId = null;
+let clickTimer = null;
+let pendingChildRows = 0;
+
+const esc = v => String(v == null ? '' : v)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function openSheet(pid){
+  editingId = pid;
+  pendingChildRows = 0;
+  drawSheet();
+  sheetEl.classList.add('open');
+  scrimEl.classList.add('open');
+}
+function closeSheet(){
+  sheetEl.classList.remove('open');
+  scrimEl.classList.remove('open');
+  editingId = null;
+}
+
+function drawSheet(){
+  const p = P.get(editingId);
+  if(!p) return closeSheet();
+  document.getElementById('sheetTitle').textContent = p.name || 'Chưa đặt tên';
+
+  const parents = parentsOf(p.id).map(id => P.get(id)).filter(Boolean);
+  const father = parents.find(x => x.sex === 'M');
+  const mother = parents.find(x => x.sex === 'F');
+  const us = unionsOfPerson(p.id);
+  const kids = us.flatMap(u => childrenOfUnion(u.id));
+
+  const descSet = descendantsOf(p.id), ancSet = ancestorsOf(p.id);
+
+  if(READONLY){
+    const mrows = us.map(u => {
+      const o = u.partners.find(x => x !== p.id);
+      const nm = o ? P.get(o).name : '(một mình)';
+      const tag = u.status === 'divorced' ? ' (cũ)' : (u.status === 'widowed' ? ' (đã mất)' : '');
+      return esc(nm) + tag;
+    });
+    bodyEl.innerHTML = `
+      <div class="photo">
+        <div class="pbox">${p.photo ? '<img src="' + p.photo + '" alt="">' : 'Ảnh'}</div>
+      </div>
+      <div class="rel"><span>Họ tên</span><b>${esc(p.name)}</b></div>
+      <div class="rel"><span>Giới tính</span><b>${p.sex === 'M' ? 'Nam' : 'Nữ'}</b></div>
+      <div class="rel"><span>Năm sinh</span><b>${p.birth || '—'}</b></div>
+      <div class="rel"><span>Năm mất</span><b>${p.death || '—'}</b></div>
+      <div class="rel"><span>Quê / nơi ở</span><b>${esc(p.place || '—')}</b></div>
+      <div class="rel"><span>Nghề nghiệp</span><b>${esc(p.job || '—')}</b></div>
+      <div class="rel"><span>Cha mẹ</span><b>${parents.length ? parents.map(x => esc(x.name)).join(' · ') : '—'}</b></div>
+      <div class="rel"><span>Vợ / chồng</span><b>${mrows.length ? mrows.join(' · ') : '—'}</b></div>
+      <div class="rel"><span>Con</span><b>${kids.length ? kids.map(k => esc(k.name)).join(' · ') : '—'}</b></div>
+      ${p.note ? '<div class="rel"><span>Ghi chú</span><b>' + esc(p.note) + '</b></div>' : ''}
+      <div class="btnrow" style="margin-top:10px">
+        <button class="ghost" id="btnFocus">Xem hộ này</button>
+      </div>`;
+    document.getElementById('btnFocus').addEventListener('click', () => focusPerson(p.id));
+    return;
+  }
+
+  const myUnion = us.find(x => x.status === 'now') || us[0];
+  const isHome = !!(myUnion && homeUnion() === myUnion.id);
+
+  /* ---------- huyết thống ---------- */
+  const parentPool = sex => DB.people
+    .filter(x => x.id !== p.id && x.sex === sex && !descSet.has(x.id))
+    .sort((a, b) => yBirth(a) - yBirth(b));
+  const optRow = (list, sel) =>
+    '<option value="">— chưa rõ —</option>' +
+    list.map(x => '<option value="' + x.id + '"' + (x.id === sel ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('') +
+    '<option value="__new__">＋ Thêm người mới…</option>';
+
+  const childBan = new Set([p.id]);
+  ancSet.forEach(x => childBan.add(x));
+  const childPool = DB.people
+    .filter(x => !childBan.has(x.id) || kids.some(k => k.id === x.id))
+    .filter(x => parentsOf(x.id).length < 2 || kids.some(k => k.id === x.id))
+    .sort((a, b) => yBirth(a) - yBirth(b));
+  const childOpt = sel =>
+    '<option value="">— chọn người —</option>' +
+    childPool.map(x => '<option value="' + x.id + '"' + (x.id === sel ? ' selected' : '') + '>' + esc(x.name) + '</option>').join('') +
+    '<option value="__new__">＋ Thêm người mới…</option>';
+
+  let childRows = kids.map(k =>
+    '<div class="mrow2" data-cid="' + k.id + '">' +
+      '<select class="cperson">' + childOpt(k.id) + '</select>' +
+      '<button class="mx" title="Gỡ">✕</button></div>').join('');
+  for(let i = 0; i < pendingChildRows; i++){
+    childRows += '<div class="mrow2" data-cid="">' +
+      '<select class="cperson">' + childOpt('') + '</select>' +
+      '<button class="mx" title="Bỏ dòng">✕</button></div>';
+  }
+
+  /* ---------- hôn nhân ---------- */
+  const spouseBan = new Set([p.id]);
+  descSet.forEach(x => spouseBan.add(x));
+  ancSet.forEach(x => spouseBan.add(x));
+  const myPar = parentsOf(p.id);
+  if(myPar.length) DB.people.forEach(x => {
+    if(x.id === p.id) return;
+    const xp = parentsOf(x.id);
+    if(xp.length && xp.every(y => myPar.indexOf(y) >= 0)) spouseBan.add(x.id);
+  });
+  const spousePool = DB.people
+    .filter(x => (x.sex !== p.sex || us.some(u => u.partners.includes(x.id))) &&
+                 (!spouseBan.has(x.id) || us.some(u => u.partners.includes(x.id))))
+    .sort((a, b) => yBirth(a) - yBirth(b));
+
+  const marriageRows = us.length ? us.map(u => {
+    const o = u.partners.find(x => x !== p.id);
+    const op = o ? P.get(o) : null;
+    const female = op ? op.sex === 'F' : p.sex === 'M';
+    const L = female ? ['Vợ hiện tại', 'Vợ cũ', 'Vợ đã mất'] : ['Chồng hiện tại', 'Chồng cũ', 'Chồng đã mất'];
+    const st = u.status || 'now';
+    return '<div class="mrow" data-uid="' + u.id + '">' +
+      '<select class="mstatus">' +
+        '<option value="now"' + (st === 'now' ? ' selected' : '') + '>' + L[0] + '</option>' +
+        '<option value="divorced"' + (st === 'divorced' ? ' selected' : '') + '>' + L[1] + '</option>' +
+        '<option value="widowed"' + (st === 'widowed' ? ' selected' : '') + '>' + L[2] + '</option>' +
+      '</select>' +
+      '<select class="mperson"><option value="">— chọn người —</option>' +
+        spousePool.map(x => '<option value="' + x.id + '"' + (x.id === o ? ' selected' : '') + '>' +
+          esc(x.name) + '</option>').join('') +
+        '<option value="__new__">＋ Thêm người mới…</option>' +
+      '</select>' +
+      '<button class="mx" title="Gỡ hôn nhân">✕</button></div>';
+  }).join('') : '<div class="pickempty" style="padding:6px 0">Chưa có hôn nhân nào</div>';
+
+  bodyEl.innerHTML = `
+    <div class="photo">
+      <div class="pbox">${p.photo ? '<img src="' + p.photo + '" alt="">' : 'Ảnh'}</div>
+      <div class="pactions">
+        <button id="pBtn">Chọn ảnh…</button>
+        ${p.photo ? '<button class="del" id="pDel">Xoá ảnh</button>' : ''}
+      </div>
+    </div>
+    <div class="field"><label>Họ và tên</label>
+      <input id="fName" value="${esc(p.name)}" autocomplete="off"></div>
+    <div class="grid3">
+      <div class="field"><label>Giới tính</label>
+        <select id="fSex">
+          <option value="M"${p.sex === 'M' ? ' selected' : ''}>Nam</option>
+          <option value="F"${p.sex === 'F' ? ' selected' : ''}>Nữ</option>
+        </select></div>
+      <div class="field"><label>Năm sinh</label>
+        <input id="fBirth" inputmode="numeric" value="${p.birth || ''}"></div>
+      <div class="field"><label>Năm mất</label>
+        <input id="fDeath" inputmode="numeric" value="${p.death || ''}"></div>
+    </div>
+    <div class="field"><label>Quê / nơi ở</label>
+      <input id="fPlace" value="${esc(p.place || '')}"></div>
+    <div class="field"><label>Nghề nghiệp</label>
+      <input id="fJob" value="${esc(p.job || '')}"></div>
+    <div class="field"><label>Ghi chú</label>
+      <textarea id="fNote" rows="3">${esc(p.note || '')}</textarea></div>
+
+    <div class="sect">Quan hệ huyết thống</div>
+    <div class="frow"><label>Cha</label><select id="selFather">${optRow(parentPool('M'), father ? father.id : '')}</select></div>
+    <div class="frow"><label>Mẹ</label><select id="selMother">${optRow(parentPool('F'), mother ? mother.id : '')}</select></div>
+    <div class="fsub">Con</div>
+    <div id="children">${childRows}</div>
+    <button id="addChild" class="addm">+ Thêm con</button>
+
+    <div class="sect">Quan hệ hôn nhân</div>
+    <div id="marriages">${marriageRows}</div>
+    <button id="addMarriage" class="addm">+ Thêm hôn nhân</button>
+
+    <div class="sect">Khác</div>
+    <div class="btnrow">
+      <button class="ghost" id="btnFocus">Đặt làm tâm sơ đồ</button>
+      <button class="ghost" id="btnHome">${isHome ? '✓ Đang là nhà gốc' : 'Đặt làm nhà gốc'}</button>
+      <button class="danger" id="btnDel">Xoá người này</button>
+    </div>`;
+
+  /* ----- lưu thông tin ----- */
+  const applyFields = () => {
+    const val = id => { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
+    const name = val('fName');
+    if(!name) return;
+    snapshot();
+    p.name  = name;
+    p.sex   = val('fSex') || 'M';
+    p.birth = parseInt(val('fBirth'), 10) || null;
+    p.death = parseInt(val('fDeath'), 10) || null;
+    p.place = val('fPlace');
+    p.job   = val('fJob');
+    p.note  = val('fNote');
+    persist(); render();
+    document.getElementById('sheetTitle').textContent = p.name;
+  };
+  ['fName','fSex','fBirth','fDeath','fPlace','fJob','fNote'].forEach(id => {
+    const e = document.getElementById(id);
+    if(e) e.addEventListener('change', applyFields);
+  });
+
+  const pBtn = document.getElementById('pBtn');
+  if(pBtn) pBtn.addEventListener('click', () => {
+    const inp = document.getElementById('photoInput');
+    if(inp){ inp.value = ''; inp.click(); }
+  });
+  const pDel = document.getElementById('pDel');
+  if(pDel) pDel.addEventListener('click', () => {
+    snapshot(); p.photo = null; persist(); render(); drawSheet();
+  });
+
+  /* ----- cha / mẹ ----- */
+  const setParent = (sex, val) => {
+    snapshot();
+    parentsOf(p.id).map(id => P.get(id)).filter(Boolean)
+      .filter(x => x.sex === sex)
+      .forEach(x => { DB.links = DB.links.filter(l => !(l.p === x.id && l.c === p.id)); });
+
+    if(val === '__new__'){
+      const id = newPerson(sex === 'M' ? 'Bố (chưa đặt tên)' : 'Mẹ (chưa đặt tên)', sex);
+      DB.links.push({ p: id, c: p.id });
+      reindex(); persist(); render(); openSheet(id); return;
+    }
+    if(val){
+      DB.links.push({ p: val, c: p.id });
+      const pars = parentsOf(p.id);
+      if(pars.length > 1 && !DB.unions.some(u => u.partners.length === 2 && pars.every(x => u.partners.includes(x))))
+        DB.unions.push({ id: uid('u'), partners: pars.slice(0, 2), status: 'now' });
+    }
+    reindex(); persist(); render(); drawSheet();
+  };
+  const sf = document.getElementById('selFather');
+  const sm = document.getElementById('selMother');
+  if(sf) sf.addEventListener('change', e => {
+    const v = e.target.value;
+    if(v && P.get(v) && P.get(v).sex !== 'M') return;   /* chỉ chọn nam làm cha */
+    setParent('M', v);
+  });
+  if(sm) sm.addEventListener('change', e => {
+    const v = e.target.value;
+    if(v && P.get(v) && P.get(v).sex !== 'F') return;
+    setParent('F', v);
+  });
+
+  /* ----- con ----- */
+  const linkChild = (pp, childId) => {
+    let u = unionsOfPerson(pp.id).find(x => x.status === 'now') || unionsOfPerson(pp.id)[0];
+    if(!u){ u = { id: uid('u'), partners: [pp.id], status: 'now' }; DB.unions.push(u); }
+    u.partners.forEach(x => {
+      if(!DB.links.some(l => l.p === x && l.c === childId)) DB.links.push({ p: x, c: childId });
+    });
+  };
+  bodyEl.querySelectorAll('.mrow2').forEach(row => {
+    const cid = row.getAttribute('data-cid');
+    const sel = row.querySelector('.cperson');
+    sel.addEventListener('change', e => {
+      const v = e.target.value;
+      if(!v) return;
+      if(cid === '') pendingChildRows = Math.max(0, pendingChildRows - 1);
+      if(v === '__new__'){
+        snapshot();
+        if(cid){
+          const own = us.flatMap(u => u.partners);
+          DB.links = DB.links.filter(l => !(l.c === cid && own.indexOf(l.p) >= 0));
+        }
+        const id = newPerson('Con (chưa đặt tên)', 'M');
+        linkChild(p, id);
+        reindex(); persist(); render(); openSheet(id); return;
+      }
+      snapshot();
+      if(cid){
+        const own = us.flatMap(u => u.partners);
+        DB.links = DB.links.filter(l => !(l.c === cid && own.indexOf(l.p) >= 0));
+      }
+      linkChild(p, v);
+      reindex(); persist(); render(); drawSheet();
+    });
+    row.querySelector('.mx').addEventListener('click', () => {
+      if(cid === ''){ pendingChildRows = Math.max(0, pendingChildRows - 1); drawSheet(); return; }
+      snapshot();
+      const own = us.flatMap(u => u.partners);
+      DB.links = DB.links.filter(l => !(l.c === cid && own.indexOf(l.p) >= 0));
+      reindex(); persist(); render(); drawSheet();
+    });
+  });
+  document.getElementById('addChild').addEventListener('click', () => {
+    pendingChildRows++;
+    drawSheet();
+  });
+
+  /* ----- hôn nhân ----- */
+  bodyEl.querySelectorAll('.mrow').forEach(row => {
+    const uidRow = row.getAttribute('data-uid');
+    const un = U.get(uidRow); if(!un) return;
+    row.querySelector('.mstatus').addEventListener('change', e => {
+      snapshot();
+      const v = e.target.value;
+      if(v === 'now') unionsOfPerson(p.id).forEach(x => {
+        if(x.id !== un.id && x.status === 'now') x.status = 'divorced';
+      });
+      un.status = v;
+      reindex(); persist(); render(); drawSheet();
+    });
+    row.querySelector('.mperson').addEventListener('change', e => {
+      const pidSel = e.target.value;
+      if(pidSel === '__new__'){
+        snapshot();
+        const id = newPerson(p.sex === 'M' ? 'Vợ (chưa đặt tên)' : 'Chồng (chưa đặt tên)',
+                             p.sex === 'M' ? 'F' : 'M');
+        un.partners = [p.id, id];
+        reindex(); persist(); render(); openSheet(id);
+        return;
+      }
+      snapshot();
+      un.partners = pidSel ? [p.id, pidSel] : [p.id];
+      reindex(); persist(); render(); drawSheet();
+    });
+    row.querySelector('.mx').addEventListener('click', () => {
+      snapshot();
+      DB.unions = DB.unions.filter(x => x.id !== un.id);
+      reindex(); persist(); render(); drawSheet();
+    });
+  });
+  document.getElementById('addMarriage').addEventListener('click', () => {
+    snapshot();
+    unionsOfPerson(p.id).forEach(x => { if(x.status === 'now') x.status = 'divorced'; });
+    DB.unions.push({ id: uid('u'), partners: [p.id], status: 'now' });
+    reindex(); persist(); render(); drawSheet();
+  });
+
+  document.getElementById('btnFocus').addEventListener('click', () => focusPerson(p.id));
+  document.getElementById('btnHome').addEventListener('click', () => setHome(p.id));
+  document.getElementById('btnDel').addEventListener('click', () => deletePerson(p.id));
+}
+
+function setHome(pid){
+  const us = unionsOfPerson(pid);
+  let u = us.find(x => x.status === 'now') || us[0];
+  if(!u){
+    u = { id: uid('u'), partners: [pid], status: 'now' };
+    DB.unions.push(u); reindex(); save();
+  }
+  UI.home = u.id;
+  saveUI();
+  drawSheet();
+}
+
+function focusPerson(pid){
+  const us = unionsOfPerson(pid);
+  let u = us.find(x => x.status === 'now') || us[0];
+  if(!u){
+    u = { id: uid('u'), partners: [pid], status: 'now' };
+    DB.unions.push(u); reindex(); save();
+  }
+  if(u.id === state.focus) return;
+  state.stack.push(state.focus);
+  state.focus = u.id;
+  closeSheet();
+  render();
+}
+
+function uid(pre){ return pre + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+
+function newPerson(name, sex){
+  const id = uid('p');
+  DB.people.push({ id, name, sex, birth: null });
+  return id;
+}
+
+function addRelative(pid, kind){
+  const p = P.get(pid); if(!p) return;
+  snapshot();
+  let newId = null;
+
+  if(kind === 'father' || kind === 'mother'){
+    newId = newPerson(kind === 'father' ? 'Bố (chưa đặt tên)' : 'Mẹ (chưa đặt tên)',
+                      kind === 'father' ? 'M' : 'F');
+    DB.links.push({ p: newId, c: pid });
+    const pars = parentsOf(pid);
+    if(pars.length > 1 && !DB.unions.some(u => u.partners.length === 2 && pars.every(x => u.partners.includes(x)))){
+      DB.unions.push({ id: uid('u'), partners: pars.slice(0, 2), status: 'now' });
+    }
+  }
+  else if(kind === 'spouse'){
+    newId = newPerson('Vợ/chồng (chưa đặt tên)', p.sex === 'M' ? 'F' : 'M');
+    unionsOfPerson(pid).filter(u => u.status === 'now').forEach(u => { u.status = 'divorced'; });
+    DB.unions.push({ id: uid('u'), partners: [pid, newId], status: 'now' });
+  }
+  else if(kind === 'child'){
+    newId = newPerson('Con (chưa đặt tên)', 'M');
+    let u = unionsOfPerson(pid).find(x => x.status === 'now');
+    if(!u){ u = { id: uid('u'), partners: [pid], status: 'now' }; DB.unions.push(u); }
+    u.partners.forEach(x => DB.links.push({ p: x, c: newId }));
+  }
+  else if(kind === 'sibling'){
+    newId = newPerson('Anh/chị/em (chưa đặt tên)', 'M');
+    parentsOf(pid).forEach(x => DB.links.push({ p: x, c: newId }));
+  }
+  if(!newId){ reindex(); return; }
+
+  reindex(); persist(); render(); openSheet(newId);
+}
+
+function deletePerson(pid){
+  const p = P.get(pid); if(!p) return;
+  let ok = true;
+  try { ok = window.confirm('Xoá "' + p.name + '" khỏi gia phả?'); } catch(e){ ok = true; }
+  if(!ok) return;
+  snapshot();
+  DB.people = DB.people.filter(x => x.id !== pid);
+  DB.links  = DB.links.filter(l => l.p !== pid && l.c !== pid);
+  DB.unions = DB.unions.filter(u => !u.partners.includes(pid));
+  reindex(); persist(); closeSheet(); render();
+}
+
+/* ============================================================
+   5. NHẬP / XUẤT DỮ LIỆU
+   ============================================================ */
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(DB, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'giapha_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+}
+
+function migrate(data){
+  if(data && data.links && data.unions && data.people) return data;            /* v3 */
+  const people = (data.people || []).map(p => Object.assign({}, p));
+  const units  = data.units || data.unions || [];
+  const unions = units.map((u, i) => ({
+    id: u.id || ('u' + i),
+    partners: [u.husbandId, u.wifeId].filter(Boolean),
+    status: u.status || 'now',
+    year: u.year || null
+  }));
+  const links = [];
+  people.forEach(p => {
+    if(!p.parentUnitId) return;
+    const u = unions.find(x => x.id === p.parentUnitId);
+    if(u) u.partners.forEach(pid => links.push({ p: pid, c: p.id }));
+    delete p.parentUnitId;
+  });
+  return { people, unions, links };
+}
+
+function importJSON(file){
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const data = migrate(JSON.parse(r.result));
+      if(!data.people || !data.unions) throw new Error('File không đúng định dạng');
+      snapshot();
+      DB = data; reindex(); persist();
+      state.focus = (DB.unions[0] && DB.unions[0].id) || null;
+      state.stack = [];
+      UI.home = null; saveUI();          /* dữ liệu mới thì gốc cũ không còn nghĩa */
+      render();
+      say('Đã nhập ' + DB.people.length + ' người.');
+    } catch(e){
+      say('Không đọc được file: ' + e.message);
+    }
+  };
+  r.readAsText(file);
+}
+
+window.__gp = { migrate, get db(){ return DB; } };
+
+
+/* ---- chọn người đã có ---- */
+const norm = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+
+let pickerCb = null, pickerAll = [];
+
+function openPicker(title, list, cb){
+  pickerCb = cb; pickerAll = list;
+  document.getElementById('pickerTitle').textContent = title;
+  document.getElementById('pickerSearch').value = '';
+  drawPickerList('');
+  document.getElementById('picker').classList.add('open');
+}
+function closePicker(){ document.getElementById('picker').classList.remove('open'); pickerCb = null; }
+function drawPickerList(q){
+  const box = document.getElementById('pickerList');
+  const nq = norm(q);
+  const rows = pickerAll
+    .filter(x => !nq || norm(x.name).indexOf(nq) >= 0)
+    .sort((a,b)=> yBirth(a) - yBirth(b));
+  box.innerHTML = rows.length
+    ? rows.map(x => '<div class="pickrow" data-pid="' + x.id + '"><span>' + esc(x.name) +
+        '</span><small>' + (x.birth || '') + '</small></div>').join('')
+    : '<div class="pickempty">Không có ai phù hợp</div>';
+  box.querySelectorAll('.pickrow').forEach(r => r.addEventListener('click', () => {
+    const id = r.getAttribute('data-pid');
+    const cb = pickerCb;
+    closePicker();
+    if(cb) cb(id);
+  }));
+}
+
+function descendantsOf(pid){
+  const out = new Set(), stack = [pid];
+  while(stack.length){
+    const id = stack.pop();
+    unionsOfPerson(id).forEach(u => childrenOfUnion(u.id).forEach(c => {
+      if(!out.has(c.id)){ out.add(c.id); stack.push(c.id); }
+    }));
+  }
+  return out;
+}
+function ancestorsOf(pid){
+  const out = new Set(), stack = [pid];
+  while(stack.length){
+    const id = stack.pop();
+    parentsOf(id).forEach(x => { if(!out.has(x)){ out.add(x); stack.push(x); } });
+  }
+  return out;
+}
+
+function pickExisting(p, kind){
+  const banned = new Set([p.id]);
+  const desc = descendantsOf(p.id), anc = ancestorsOf(p.id);
+  if(kind === 'father' || kind === 'mother') desc.forEach(x => banned.add(x));
+  if(kind === 'child') anc.forEach(x => banned.add(x));
+  if(kind === 'spouse' || kind === 'sibling'){ desc.forEach(x => banned.add(x)); anc.forEach(x => banned.add(x)); }
+  if(kind === 'spouse'){
+    const myPar = parentsOf(p.id);
+    if(myPar.length) DB.people.forEach(x => {
+      if(x.id === p.id) return;
+      const xp = parentsOf(x.id);
+      if(xp.length && xp.every(y => myPar.indexOf(y) >= 0)) banned.add(x.id);   /* không cho lấy anh chị em ruột */
+    });
+  }
+
+  const list = DB.people.filter(x => !banned.has(x.id));
+  const title = { father:'Chọn người làm cha', mother:'Chọn người làm mẹ',
+                  spouse:'Chọn người làm vợ/chồng', child:'Chọn người làm con',
+                  sibling:'Chọn người làm anh/chị/em' }[kind];
+  openPicker(title, list, otherId => applyLink(p, kind, otherId));
+}
+
+function applyLink(p, kind, otherId){
+  if(!otherId || otherId === p.id) return;
+  snapshot();
+
+  if(kind === 'father' || kind === 'mother'){
+    if(parentsOf(p.id).indexOf(otherId) < 0) DB.links.push({ p: otherId, c: p.id });
+    const pars = parentsOf(p.id);
+    if(pars.length > 1 && !DB.unions.some(u => u.partners.length === 2 && pars.every(x => u.partners.includes(x))))
+      DB.unions.push({ id: uid('u'), partners: pars.slice(0, 2), status: 'now' });
+  }
+  else if(kind === 'spouse'){
+    unionsOfPerson(p.id).filter(u => u.status === 'now').forEach(u => { u.status = 'divorced'; });
+    DB.unions.push({ id: uid('u'), partners: [p.id, otherId], status: 'now' });
+  }
+  else if(kind === 'child'){
+    let u = unionsOfPerson(p.id).find(x => x.status === 'now');
+    if(!u){ u = { id: uid('u'), partners: [p.id], status: 'now' }; DB.unions.push(u); }
+    u.partners.forEach(x => {
+      if(!DB.links.some(l => l.p === x && l.c === otherId)) DB.links.push({ p: x, c: otherId });
+    });
+  }
+  else if(kind === 'sibling'){
+    parentsOf(p.id).forEach(x => {
+      if(!DB.links.some(l => l.p === x && l.c === otherId)) DB.links.push({ p: x, c: otherId });
+    });
+  }
+
+  reindex(); persist(); render(); drawSheet();
+}
+
+document.getElementById('pickerClose').addEventListener('click', closePicker);
+document.getElementById('picker').addEventListener('click', e => {
+  if(e.target && e.target.id === 'picker') closePicker();
+});
+document.getElementById('pickerSearch').addEventListener('input', e => drawPickerList(e.target.value));
+
+document.getElementById('firstBtn').addEventListener('click', ()=>{
+  snapshot();
+  const id = newPerson('Người đầu tiên', 'M');
+  const u = { id: uid('u'), partners: [id], status: 'now' };
+  DB.unions.push(u);
+  reindex(); persist();
+  state.focus = u.id; state.stack = [];
+  render(); openSheet(id);
+});
+
+document.getElementById('viewBtn').addEventListener('click', ()=>{
+  const clone = document.documentElement.cloneNode(true);
+  const cv = clone.querySelector('#canvas');
+  if(cv){
+    const w = cv.querySelector('#wires'); if(w) w.innerHTML = '';
+    const c = cv.querySelector('#cards'); if(c) c.innerHTML = '';
+  }
+  clone.querySelectorAll('.winglabel,.generation').forEach(e => e.remove());
+  const head = clone.querySelector('script');
+  const data = document.createElement('script');
+  data.textContent = 'window.__DATA__=' + JSON.stringify(DB) + ';';
+  head.parentNode.insertBefore(data, head);
+  const html = '<!doctype html>\n' + clone.outerHTML;
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'GiaPha_xem.html';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+});
+
+document.getElementById('copyBtn').addEventListener('click', async ()=>{
+  const txt = JSON.stringify(DB);
+  try {
+    await navigator.clipboard.writeText(txt);
+    document.getElementById('copyBtn').textContent = 'Đã sao chép ✓';
+    setTimeout(()=>{ document.getElementById('copyBtn').textContent = 'Sao chép dữ liệu'; }, 1600);
+  } catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); document.getElementById('copyBtn').textContent = 'Đã sao chép ✓'; } catch(_){}
+    document.body.removeChild(ta);
+    setTimeout(()=>{ document.getElementById('copyBtn').textContent = 'Sao chép dữ liệu'; }, 1600);
+  }
+});
+
+document.getElementById('pasteBtn').addEventListener('click', ()=>{
+  document.getElementById('pasteBox').value = '';
+  document.getElementById('paste').classList.add('open');
+});
+document.getElementById('pasteClose').addEventListener('click', ()=>{
+  document.getElementById('paste').classList.remove('open');
+});
+document.getElementById('paste').addEventListener('click', e => {
+  if(e.target && e.target.id === 'paste') document.getElementById('paste').classList.remove('open');
+});
+document.getElementById('pasteGo').addEventListener('click', ()=>{
+  const raw = document.getElementById('pasteBox').value.trim();
+  if(!raw) return;
+  try {
+    const data = migrate(JSON.parse(raw));
+    if(!data.people || !data.unions) throw new Error('không đúng định dạng');
+    snapshot();
+    DB = data; reindex(); persist();
+    state.focus = homeUnion() || (DB.unions[0] && DB.unions[0].id) || null;
+    state.stack = [];
+    document.getElementById('paste').classList.remove('open');
+    render();
+    say('Đã nhập ' + DB.people.length + ' người.');
+  } catch(err){
+    say('Không đọc được dữ liệu: ' + err.message);
+  }
+});
+
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  if(!window.confirm('Xoá toàn bộ dữ liệu gia phả đang có?')) return;
+  snapshot();
+  DB = { people: [], unions: [], links: [] };
+  reindex(); persist();
+  state.focus = null; state.stack = [];
+  closeSheet(); render();
+});
+
+document.getElementById('photoInput').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  const per = P.get(editingId);
+  if(!per) return;
+  const img = new Image();
+  const url = URL.createObjectURL(f);
+  img.onload = () => {
+    try {
+      const S = 200;
+      const c = document.createElement('canvas');
+      c.width = c.height = S;
+      const g = c.getContext('2d');
+      const k = Math.max(S / img.width, S / img.height);
+      const w = img.width * k, h = img.height * k;
+      g.drawImage(img, (S - w) / 2, (S - h) / 2, w, h);
+      snapshot();
+      per.photo = c.toDataURL('image/jpeg', 0.72);
+      persist(); render(); drawSheet();
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  };
+  img.src = url;
+});
+
+document.getElementById('sheetClose').addEventListener('click', closeSheet);
+scrimEl.addEventListener('click', closeSheet);
+document.getElementById('undoBtn').addEventListener('click', undo);
+document.getElementById('menuBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  document.getElementById('menu').classList.toggle('open');
+});
+document.getElementById('menu').addEventListener('click', e => {
+  const b = e.target.closest('button[data-go]');
+  if(!b) return;
+  document.getElementById('menu').classList.remove('open');
+  const t = document.getElementById(b.getAttribute('data-go'));
+  if(t) t.click();
+});
+document.addEventListener('click', () => document.getElementById('menu').classList.remove('open'));
+
+document.getElementById('exportBtn').addEventListener('click', exportJSON);
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('fileInput').addEventListener('change', e => {
+  if(e.target.files && e.target.files[0]) importJSON(e.target.files[0]);
+  e.target.value = '';
+});
+
+document.getElementById('wideBtn').addEventListener('click', ()=>{
+  state.wide = !state.wide;
+  document.getElementById('wideBtn').textContent =
+    'Hiện cháu (con anh/chị em): ' + (state.wide ? 'BẬT' : 'TẮT');
+  render();
+});
+document.getElementById('stepBtn').addEventListener('click', ()=>{
+  state.showStep = !state.showStep;
+  document.getElementById('stepBtn').textContent =
+    'Con riêng trong hàng con: ' + (state.showStep ? 'BẬT' : 'TẮT');
+  render();
+});
+document.getElementById('zoomIn').addEventListener('click', ()=> setZoom(zoomScale() + 0.15));
+document.getElementById('zoomOut').addEventListener('click', ()=> setZoom(zoomScale() - 0.15));
+document.getElementById('zoomLbl').addEventListener('click', ()=> setZoom(1));
+document.getElementById('zoomFit').addEventListener('click', ()=>{ state.zoom = null; applyZoom(); });
+stage.addEventListener('wheel', e => {
+  if(!e.ctrlKey) return;
+  e.preventDefault();
+  setZoom(zoomScale() * (e.deltaY < 0 ? 1.12 : 0.89));
+}, { passive:false });
+document.getElementById('backBtn').addEventListener('click', ()=>{
+  if(!state.stack.length) return;
+  state.focus = state.stack.pop();
+  render();
+});
+document.getElementById('homeBtn').addEventListener('click', ()=>{
+  const h = homeUnion();
+  if(!h) return;
+  if(state.focus === h && !state.stack.length) return;
+  state.stack = [];
+  state.focus = h;
+  render();
+});
+
+if(READONLY) document.body.classList.add('ro');
+
+/* mở file thì đứng sẵn ở nhà gốc */
+state.focus = homeUnion() || (DB.unions[0] && DB.unions[0].id) || state.focus;
+render();
+</script>
+
+
+
+
+</body></html>
