@@ -94,6 +94,22 @@
           padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
   .toggle:hover{background:#E2E8F5}
 
+  #list{display:none;overflow:auto;height:100%;padding:10px 12px 40px;background:var(--bg)}
+  #list.on{display:block}
+  .lgroup{font-size:11px;font-weight:800;letter-spacing:1px;color:#8A94AB;text-transform:uppercase;
+    margin:14px 2px 6px;position:sticky;top:0;background:var(--bg);padding:4px 0}
+  .lrow{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);
+    border-radius:11px;padding:9px 11px;margin-bottom:7px;cursor:pointer}
+  .lrow:active{background:#F3F6FC}
+  .lav{width:38px;height:38px;border-radius:50%;flex:0 0 38px;display:grid;place-items:center;
+    background:var(--navy);color:#fff;font-size:12px;font-weight:800;background-size:cover;background-position:center}
+  .lrow.f .lav{background:var(--fem)}
+  .lbody{min-width:0;flex:1 1 auto}
+  .lname{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lsub{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .lrole{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;color:var(--navy);
+    background:#EEF2FA;border-radius:6px;padding:2px 7px;white-space:nowrap}
+  .lrow.f .lrole{color:#8A5A00;background:#FEF6E4}
   #empty{position:absolute;inset:0;display:none;place-content:center;justify-items:center;gap:8px;text-align:center;padding:24px}
   #empty .e-title{font-size:18px;font-weight:800;color:var(--navy)}
   #empty .e-sub{font-size:13px;color:var(--muted);max-width:340px;line-height:1.5}
@@ -193,6 +209,16 @@
   header{position:relative}
   body.ro .editonly{display:none}
   body.ro .sect, body.ro .btnrow{display:none}
+  @media (max-width: 700px){
+    .brand span,.brand h1{display:none}
+    .pill{display:none}
+    #undoBtn,#backBtn{display:none}
+    #zoomFit{display:none}
+    header{gap:6px;padding:8px 10px}
+    .btn{width:30px;height:30px;font-size:13px}
+    .btn.lbl{font-size:11px;padding:0 7px}
+    #viewToggle{font-size:11px;padding:0 8px}
+  }
 </style>
 </head>
 <body>
@@ -219,18 +245,20 @@
   <div class="focus">
     <div class="pill" id="focusPill"><b>Đang xem:</b> ông Giang ═ bà Hoàng Dung · 1 con · 0 cháu</div>
     <button class="btn" id="undoBtn" title="Hoàn tác">↺</button>
+    <button class="btn" id="viewToggle" title="Sơ đồ / Danh sách" style="width:auto;padding:0 9px;font-size:11.5px;font-weight:700">Danh sách</button>
     <div class="zoomgrp">
       <button class="btn" id="zoomOut" title="Thu nhỏ">−</button>
       <button class="btn lbl" id="zoomLbl" title="Về kích thước gốc 100%">62%</button>
       <button class="btn" id="zoomIn" title="Phóng to">+</button>
-      <button class="btn" id="zoomFit" title="Vừa khung">⤢</button>
+      <button class="btn lbl" id="zoomFit" title="Vừa khung">Vừa</button>
     </div>
-    <button class="btn" id="backBtn" title="Quay lại hộ trước" disabled="">←</button>
+    <button class="btn" id="backBtn" title="Quay lại hộ trước" disabled="">‹</button>
     <button class="btn" id="homeBtn" title="Về nhà tôi">⌂</button>
   </div>
 </header>
 
 <main id="stage">
+  <div id="list"></div>
   <div id="empty" style="display: none;">
     <div class="e-title">Gia phả đang trống</div>
     <div class="e-sub">Bắt đầu bằng một người, rồi thêm cha mẹ, vợ chồng, con cái quanh người đó.</div>
@@ -763,7 +791,7 @@ function roleOf(n, focus, roleMap){
 /* ============================================================
    3. VẼ
    ============================================================ */
-const state = { focus:'u1', home:'u1', stack:[], zoom:null, _last:null, showStep:true, wide:false };
+const state = { focus:'u1', home:'u1', stack:[], zoom:null, _last:null, showStep:true, wide:false, view:(window.innerWidth <= 700 ? 'list' : 'tree') };
 const canvas = document.getElementById('canvas');
 const wires  = document.getElementById('wires');
 const cards  = document.getElementById('cards');
@@ -822,6 +850,54 @@ function setZoom(z){
   applyZoom();
 }
 
+function drawList(L){
+  const listEl = document.getElementById('list');
+  const rows = [...L.nodes].sort((a, b) =>
+    (a.depth - b.depth) || (yBirth(P.get(a.pid)) - yBirth(P.get(b.pid))));
+
+  let html = '', cur = null;
+  rows.forEach(n => {
+    if(n.depth !== cur){ cur = n.depth; html += '<div class="lgroup">' + rowLabel(cur) + '</div>'; }
+    const p = P.get(n.pid);
+    const yrs = p.birth ? (p.death ? p.birth + '–' + p.death : p.birth) : '';
+    const ini = p.name.trim().split(/\s+/).slice(-2).map(w => w[0]).join('');
+    const av = p.photo
+      ? '<div class="lav" style="background-image:url(' + p.photo + ')"></div>'
+      : '<div class="lav">' + ini + '</div>';
+    html += '<div class="lrow' + (p.sex === 'F' ? ' f' : '') + '" data-pid="' + p.id + '">' +
+      av +
+      '<div class="lbody"><div class="lname">' + esc(p.name) + '</div>' +
+      '<div class="lsub">' + yrs + (p.job ? ' · ' + esc(p.job) : '') + '</div></div>' +
+      (n.role ? '<span class="lrole">' + esc(n.role) + '</span>' : '') +
+      '</div>';
+  });
+  listEl.innerHTML = html;
+  listEl.querySelectorAll('.lrow').forEach(r => {
+    r.addEventListener('click', () => openSheet(r.getAttribute('data-pid')));
+  });
+}
+
+const ROWNAME = {'-3':'CỤ CỤ','-2':'CỤ','-1':'ÔNG BÀ','0':'BỐ MẸ','1':'CON','2':'CHÁU','3':'CHẮT'};
+function rowLabel(d){ return ROWNAME[String(d)] || (d < 0 ? 'CỤ' : 'CHÁU'); }
+
+function updatePill(focus){
+  const hp = focus.partners.map(p => P.get(p));
+  const name = hp.length > 1
+    ? `${hp[0].sex === 'M' ? 'ông' : 'bà'} ${hp[0].name} ═ ${hp[1].sex === 'M' ? 'ông' : 'bà'} ${hp[1].name}`
+    : `${hp[0].sex === 'M' ? 'ông' : 'bà'} ${hp[0].name}`;
+  const nKids = childrenOfUnion(focus.id).length;
+  let nGrand = 0;
+  childrenOfUnion(focus.id).forEach(k=>{
+    const sp = currentSpouseOf(k.id);
+    const gu = DB.unions.find(u => u.partners.includes(k.id) && (!sp || u.partners.includes(sp)));
+    if(gu) nGrand += childrenOfUnion(gu.id).length;
+  });
+  document.getElementById('focusPill').innerHTML =
+    `<b>Đang xem:</b> ${name} · ${nKids} con · ${nGrand} cháu`;
+  document.getElementById('backBtn').disabled = state.stack.length === 0;
+
+}
+
 function render(){
   const emptyEl = document.getElementById('empty');
   if(!DB.people.length){
@@ -845,6 +921,18 @@ function render(){
   }
 
   const L = layout(state.focus, state.showStep);
+
+  const listEl = document.getElementById('list');
+  if(state.view === 'list'){
+    drawList(L);
+    canvas.style.display = 'none';
+    emptyEl.style.display = 'none';
+    listEl.classList.add('on');
+    updatePill(L.focus);
+    return;
+  }
+  listEl.classList.remove('on');
+  canvas.style.display = '';
   const byPid = new Map(L.nodes.map(n => [n.pid, n]));
   const focus = L.focus;
 
@@ -922,11 +1010,9 @@ function render(){
   }
 
   /* --- nhãn đời --- */
-  const ROWNAME = {'-3':'CỤ CỤ','-2':'CỤ','-1':'ÔNG BÀ','0':'BỐ MẸ','1':'CON','2':'CHÁU','3':'CHẮT'};
-  const rowName = d => ROWNAME[String(d)] || (d < 0 ? 'CỤ' : 'CHÁU');
   for(let d = L.minD; d <= L.maxD; d++){
     if(!L.nodes.some(n => n.depth === d)) continue;
-    const lab = el('div','generation', rowName(d));
+    const lab = el('div','generation', rowLabel(d));
     lab.style.left = '14px';
     lab.style.top  = (PAD_Y + (d - L.minD) * ROW_H + CARD_H/2 - 26) + 'px';
     canvas.appendChild(lab);
@@ -1079,20 +1165,7 @@ function render(){
   });
 
   /* --- thanh tiêu đề --- */
-  const hp = focus.partners.map(p => P.get(p));
-  const name = hp.length > 1
-    ? `${hp[0].sex === 'M' ? 'ông' : 'bà'} ${hp[0].name} ═ ${hp[1].sex === 'M' ? 'ông' : 'bà'} ${hp[1].name}`
-    : `${hp[0].sex === 'M' ? 'ông' : 'bà'} ${hp[0].name}`;
-  const nKids = childrenOfUnion(focus.id).length;
-  let nGrand = 0;
-  childrenOfUnion(focus.id).forEach(k=>{
-    const sp = currentSpouseOf(k.id);
-    const gu = DB.unions.find(u => u.partners.includes(k.id) && (!sp || u.partners.includes(sp)));
-    if(gu) nGrand += childrenOfUnion(gu.id).length;
-  });
-  document.getElementById('focusPill').innerHTML =
-    `<b>Đang xem:</b> ${name} · ${nKids} con · ${nGrand} cháu`;
-  document.getElementById('backBtn').disabled = state.stack.length === 0;
+  updatePill(focus);
 
   /* cuộn về giữa */
   requestAnimationFrame(()=>{
@@ -1798,6 +1871,12 @@ document.getElementById('photoInput').addEventListener('change', e => {
 
 document.getElementById('sheetClose').addEventListener('click', closeSheet);
 scrimEl.addEventListener('click', closeSheet);
+document.getElementById('viewToggle').textContent = state.view === 'list' ? 'Sơ đồ' : 'Danh sách';
+document.getElementById('viewToggle').addEventListener('click', ()=>{
+  state.view = state.view === 'list' ? 'tree' : 'list';
+  document.getElementById('viewToggle').textContent = state.view === 'list' ? 'Sơ đồ' : 'Danh sách';
+  render();
+});
 document.getElementById('undoBtn').addEventListener('click', undo);
 document.getElementById('menuBtn').addEventListener('click', e => {
   e.stopPropagation();
